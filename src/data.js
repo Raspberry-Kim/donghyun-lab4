@@ -35,8 +35,8 @@ const UNITS = {
   inf:     {name:'보병',       short:'보병', cost:1000,  move:3, mt:'foot',  fuel:99, ammo:0, range:[1,1], cls:'foot',  cap:true},
   mech:    {name:'기계화보병', short:'기보', cost:3000,  move:2, mt:'mech',  fuel:70, ammo:3, range:[1,1], cls:'foot',  cap:true},
   recon:   {name:'정찰차',     short:'정찰', cost:4000,  move:8, mt:'tire',  fuel:80, ammo:0, range:[1,1], cls:'vehicle'},
-  tank:    {name:'경전차',     short:'경전', cost:7000,  move:6, mt:'tread', fuel:70, ammo:9, range:[1,1], cls:'vehicle'},
-  md:      {name:'중전차',     short:'중전', cost:16000, move:5, mt:'tread', fuel:50, ammo:8, range:[1,1], cls:'vehicle'},
+  tank:    {name:'전차',       short:'전차', cost:7000,  move:6, mt:'tread', fuel:70, ammo:9, range:[1,1], cls:'vehicle'},
+  md:      {name:'대형전차',   short:'대형', cost:16000, move:5, mt:'tread', fuel:50, ammo:8, range:[1,1], cls:'vehicle'},
   neo:     {name:'신형전차',   short:'신형', cost:22000, move:6, mt:'tread', fuel:99, ammo:9, range:[1,1], cls:'vehicle'},
   apc:     {name:'보급차',     short:'보급', cost:5000,  move:6, mt:'tread', fuel:70, ammo:0, range:null,  cls:'vehicle', carry:['foot'], cap_n:1, supply:true},
   art:     {name:'자주포',     short:'자주', cost:6000,  move:5, mt:'tread', fuel:50, ammo:9, range:[2,3], cls:'vehicle', indirect:true},
@@ -61,7 +61,7 @@ const BUILD = {
 
 /* 피해표(동현전 자체 조정값, 기본 피해 %).
    pri: 탄약을 쓰는 주무기, sec: 탄약 제한이 없는 부무기.
-   열 순서는 UNIT_ORDER와 같다: 보병 기보 정찰 경전 중전 신형 보급 자주 로켓 대공 미사 전투 폭격 공헬 수헬 전함 순양 수송 잠수 */
+   열 순서는 UNIT_ORDER와 같다: 보병 기보 정찰 전차 대형 신형 보급 자주 로켓 대공 미사 전투 폭격 공헬 수헬 전함 순양 수송 잠수 */
 const _ = null;
 const DMG = {
   inf:    {sec:[55,45,12, 5, 1, 1,14,15,25, 5,25, _, _, 7,30, _, _, _, _]},
@@ -94,27 +94,27 @@ const DMG = {
 /* 지휘관: 붉은별 사령부. 이름·얼굴·대사는 동현전의 창작이다.
    능력의 틀(균형형·근접형·보병형·행운형·절약형)은 고전 전술 게임 지휘관 구성에서 흔한 원형을 참고했다. */
 const COS = [
-  {id:1, name:'한결', role:'정비형 균형 지휘관', color:'#d8483a',
+  {id:1, name:'뭉치', role:'정비형 균형 지휘관', color:'#d8483a',
    passive:'특별한 강점도 약점도 없다. 어떤 지도에서도 무난하다.',
    cop:{name:'응급 정비', stars:3, text:'모든 아군 체력 +2'},
    scop:{name:'총력 정비', stars:6, text:'모든 아군 체력 +5 · 공격 +10% · 이동 +1'},
    line:'고장 난 건 고치면 된다. 다시 가자.'},
-  {id:2, name:'무쇠', role:'근접 돌파 지휘관', color:'#b9452e',
+  {id:2, name:'뚱띠', role:'근접 돌파 지휘관', color:'#b9452e',
    passive:'보병이 아닌 근접 공격 유닛 공격 +20%. 간접 공격 유닛은 공격 −10%, 최대 사거리 −1.',
    cop:{name:'철갑 돌격', stars:3, text:'근접 차량·항공·함정 공격 +10%p 추가 · 이동 +1'},
    scop:{name:'무쇠 폭풍', stars:6, text:'근접 차량·항공·함정 공격 +30%p 추가 · 이동 +2'},
    line:'정면으로 부딪치면 길이 생긴다.'},
-  {id:3, name:'새벽', role:'보병·점령 지휘관', color:'#e0663f',
+  {id:3, name:'또치', role:'보병·점령 지휘관', color:'#e0663f',
    passive:'보병·기계화보병 공격 +20%, 점령 속도 1.5배. 수송 유닛 이동 +1. 그 밖의 근접 유닛 공격 −10%.',
    cop:{name:'새벽 행군', stars:3, text:'보병류 이동 +1 · 공격 +10%p 추가'},
    scop:{name:'해 뜨는 진격', stars:8, text:'보병류 이동 +2 · 공격 +20%p 추가 · 점령을 한 번에 끝낸다'},
    line:'깃발은 발로 꽂는 것이다.'},
-  {id:4, name:'다행', role:'행운형 지휘관', color:'#f08a4b',
+  {id:4, name:'포동이', role:'행운형 지휘관', color:'#f08a4b',
    passive:'공격할 때 운 보정이 0–19로 넓다. 일반 지휘관은 0–9.',
    cop:{name:'네잎 행운', stars:3, text:'운 보정 0–59'},
    scop:{name:'대박 행운', stars:6, text:'운 보정 0–99'},
    line:'오늘은 왠지 잘 맞을 것 같아.'},
-  {id:5, name:'곳간', role:'절약·보급 지휘관', color:'#c75b39',
+  {id:5, name:'뿡뿡', role:'절약·보급 지휘관', color:'#c75b39',
    passive:'모든 유닛 생산 비용 90%.',
    cop:{name:'반값 장터', stars:2, text:'이번 턴 생산 비용 50%'},
    scop:{name:'골목 상회', stars:5, text:'생산 비용 50% · 아군 도시에서도 지상 유닛 생산'},

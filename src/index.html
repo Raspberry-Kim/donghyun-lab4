@@ -2,7 +2,7 @@
 <html lang="ko" data-theme="light">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="동현랭으로 출전 명령을 내리고 방향키로 부대를 지휘하는 1인용 턴제 전술 게임. 동현랭 외전 동현전.">
+  <meta name="description" content="동현랭으로 참전하는 턴제 전략 시뮬레이션 게임이다. 동현랭 외전 동현전.">
   <title>동현전™ · 동현랭으로 출전하는 작은 전술 게임</title>
   <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="./favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
@@ -19,10 +19,10 @@
 <nav class="series-strip" aria-label="동현 프로젝트 이동"><p class="series-context"><strong>동현의 작은 실험들</strong>하나의 언어, 세 개의 작은 세계 그리고 외전 하나</p><div class="series-links"><a class="series-item" data-series="lang" href="https://raspberry-kim.github.io/donghyun-lang/" aria-label="동현랭™ 언어 플레이그라운드로 이동"><span class="series-name">동현랭<sup>™</sup></span><span class="series-note">언어</span></a><a class="series-item" data-series="fly" href="https://raspberry-kim.github.io/donghyun-lab1/" aria-label="동현초™ 초파리 회로실험실로 이동"><span class="series-name">동현초<sup>™</sup></span><span class="series-note">초파리</span></a><a class="series-item" data-series="worm" href="https://raspberry-kim.github.io/donghyun-lab2/" aria-label="동현파™ 선충 회로실험실로 이동"><span class="series-name">동현파<sup>™</sup></span><span class="series-note">선충</span></a><a class="series-item" data-series="village" href="https://raspberry-kim.github.io/donghyun-lab3/" aria-label="동현빌™ 마을 유행 실험실로 이동"><span class="series-name">동현빌<sup>™</sup></span><span class="series-note">마을</span></a></div><span class="series-side" aria-current="page"><b>외전</b>동현전<small>지금 여기</small></span></nav>
 <!-- SERIES-NAV-END -->
   <section class="intro">
-    <div><div class="eyebrow">ESOTERIC LANGUAGE × TURN-BASED TACTICS</div><h1>동현랭 외전: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 출전 명령을 내리고, 방향키로 붉은 진영을 지휘해 컴퓨터의 푸른 진영과 겨룬다.</p></div>
+    <div><div class="eyebrow">ESOTERIC LANGUAGE × TURN-BASED TACTICS</div><h1>동현랭 외전: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 참전하는 턴제 전략 시뮬레이션 게임이다.</p></div>
     <div class="model-stamp"><strong>1 <span>대</span> CPU</strong><strong>19 <span>병종</span></strong><small>난이도 보통 · 안개 없음 · 지도 4종</small></div>
   </section>
-  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현랭 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>시작은 동현랭으로, 지휘는 키보드로</span></nav>
+  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현전 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>시작은 동현랭으로, 지휘는 키보드로</span></nav>
 
   <section id="tab-play" class="tab-panel">
     <div class="play-grid" id="play-grid">
@@ -69,7 +69,7 @@
     <div class="doc-heading"><div class="eyebrow">SORTIE I/O · v0.1</div><h2>출전은 동현랭으로, 전투는 키보드로.</h2><p>동현랭 프로그램이 출력한 정수를 차례로 읽는다. 명령 번호 하나 뒤에 값 하나가 온다. 마지막에 <code>6</code>을 출력해야 전장에 나간다. 전투가 시작된 뒤에는 동현랭을 쓰지 않는다.</p></div>
     <div class="table-wrap"><table><thead><tr><th>명령</th><th>하는 일</th><th>값</th><th>기본값</th></tr></thead><tbody>
       <tr><td>1</td><td>지도</td><td>1 작은 연습장 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑</td><td>1</td></tr>
-      <tr><td>2</td><td>나의 지휘관</td><td>1 한결 · 2 무쇠 · 3 새벽 · 4 다행 · 5 곳간</td><td>1</td></tr>
+      <tr><td>2</td><td>나의 지휘관</td><td>1 뭉치 · 2 뚱띠 · 3 또치 · 4 포동이 · 5 뿡뿡</td><td>1</td></tr>
       <tr><td>3</td><td>컴퓨터 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
       <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 컴퓨터가 먼저</td><td>1</td></tr>
       <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액</td><td>0</td></tr>

@@ -2,7 +2,7 @@
 <html lang="ko" data-theme="light">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="동현랭으로 출전 명령을 내리고 방향키로 부대를 지휘하는 1인용 턴제 전술 게임. 동현랭 외전 동현전.">
+  <meta name="description" content="동현랭으로 참전하는 턴제 전략 시뮬레이션 게임이다. 동현랭 외전 동현전.">
   <title>동현전™ · 동현랭으로 출전하는 작은 전술 게임</title>
   <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="./favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
@@ -254,10 +254,10 @@ footer a{color:var(--muted)}
 <nav class="series-strip" aria-label="동현 프로젝트 이동"><p class="series-context"><strong>동현의 작은 실험들</strong>하나의 언어, 세 개의 작은 세계 그리고 외전 하나</p><div class="series-links"><a class="series-item" data-series="lang" href="https://raspberry-kim.github.io/donghyun-lang/" aria-label="동현랭™ 언어 플레이그라운드로 이동"><span class="series-name">동현랭<sup>™</sup></span><span class="series-note">언어</span></a><a class="series-item" data-series="fly" href="https://raspberry-kim.github.io/donghyun-lab1/" aria-label="동현초™ 초파리 회로실험실로 이동"><span class="series-name">동현초<sup>™</sup></span><span class="series-note">초파리</span></a><a class="series-item" data-series="worm" href="https://raspberry-kim.github.io/donghyun-lab2/" aria-label="동현파™ 선충 회로실험실로 이동"><span class="series-name">동현파<sup>™</sup></span><span class="series-note">선충</span></a><a class="series-item" data-series="village" href="https://raspberry-kim.github.io/donghyun-lab3/" aria-label="동현빌™ 마을 유행 실험실로 이동"><span class="series-name">동현빌<sup>™</sup></span><span class="series-note">마을</span></a></div><span class="series-side" aria-current="page"><b>외전</b>동현전<small>지금 여기</small></span></nav>
 <!-- SERIES-NAV-END -->
   <section class="intro">
-    <div><div class="eyebrow">ESOTERIC LANGUAGE × TURN-BASED TACTICS</div><h1>동현랭 외전: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 출전 명령을 내리고, 방향키로 붉은 진영을 지휘해 컴퓨터의 푸른 진영과 겨룬다.</p></div>
+    <div><div class="eyebrow">ESOTERIC LANGUAGE × TURN-BASED TACTICS</div><h1>동현랭 외전: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 참전하는 턴제 전략 시뮬레이션 게임이다.</p></div>
     <div class="model-stamp"><strong>1 <span>대</span> CPU</strong><strong>19 <span>병종</span></strong><small>난이도 보통 · 안개 없음 · 지도 4종</small></div>
   </section>
-  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현랭 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>시작은 동현랭으로, 지휘는 키보드로</span></nav>
+  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현전 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>시작은 동현랭으로, 지휘는 키보드로</span></nav>
 
   <section id="tab-play" class="tab-panel">
     <div class="play-grid" id="play-grid">
@@ -304,7 +304,7 @@ footer a{color:var(--muted)}
     <div class="doc-heading"><div class="eyebrow">SORTIE I/O · v0.1</div><h2>출전은 동현랭으로, 전투는 키보드로.</h2><p>동현랭 프로그램이 출력한 정수를 차례로 읽는다. 명령 번호 하나 뒤에 값 하나가 온다. 마지막에 <code>6</code>을 출력해야 전장에 나간다. 전투가 시작된 뒤에는 동현랭을 쓰지 않는다.</p></div>
     <div class="table-wrap"><table><thead><tr><th>명령</th><th>하는 일</th><th>값</th><th>기본값</th></tr></thead><tbody>
       <tr><td>1</td><td>지도</td><td>1 작은 연습장 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑</td><td>1</td></tr>
-      <tr><td>2</td><td>나의 지휘관</td><td>1 한결 · 2 무쇠 · 3 새벽 · 4 다행 · 5 곳간</td><td>1</td></tr>
+      <tr><td>2</td><td>나의 지휘관</td><td>1 뭉치 · 2 뚱띠 · 3 또치 · 4 포동이 · 5 뿡뿡</td><td>1</td></tr>
       <tr><td>3</td><td>컴퓨터 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
       <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 컴퓨터가 먼저</td><td>1</td></tr>
       <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액</td><td>0</td></tr>
@@ -615,8 +615,8 @@ const UNITS = {
   inf:     {name:'보병',       short:'보병', cost:1000,  move:3, mt:'foot',  fuel:99, ammo:0, range:[1,1], cls:'foot',  cap:true},
   mech:    {name:'기계화보병', short:'기보', cost:3000,  move:2, mt:'mech',  fuel:70, ammo:3, range:[1,1], cls:'foot',  cap:true},
   recon:   {name:'정찰차',     short:'정찰', cost:4000,  move:8, mt:'tire',  fuel:80, ammo:0, range:[1,1], cls:'vehicle'},
-  tank:    {name:'경전차',     short:'경전', cost:7000,  move:6, mt:'tread', fuel:70, ammo:9, range:[1,1], cls:'vehicle'},
-  md:      {name:'중전차',     short:'중전', cost:16000, move:5, mt:'tread', fuel:50, ammo:8, range:[1,1], cls:'vehicle'},
+  tank:    {name:'전차',       short:'전차', cost:7000,  move:6, mt:'tread', fuel:70, ammo:9, range:[1,1], cls:'vehicle'},
+  md:      {name:'대형전차',   short:'대형', cost:16000, move:5, mt:'tread', fuel:50, ammo:8, range:[1,1], cls:'vehicle'},
   neo:     {name:'신형전차',   short:'신형', cost:22000, move:6, mt:'tread', fuel:99, ammo:9, range:[1,1], cls:'vehicle'},
   apc:     {name:'보급차',     short:'보급', cost:5000,  move:6, mt:'tread', fuel:70, ammo:0, range:null,  cls:'vehicle', carry:['foot'], cap_n:1, supply:true},
   art:     {name:'자주포',     short:'자주', cost:6000,  move:5, mt:'tread', fuel:50, ammo:9, range:[2,3], cls:'vehicle', indirect:true},
@@ -641,7 +641,7 @@ const BUILD = {
 
 /* 피해표(동현전 자체 조정값, 기본 피해 %).
    pri: 탄약을 쓰는 주무기, sec: 탄약 제한이 없는 부무기.
-   열 순서는 UNIT_ORDER와 같다: 보병 기보 정찰 경전 중전 신형 보급 자주 로켓 대공 미사 전투 폭격 공헬 수헬 전함 순양 수송 잠수 */
+   열 순서는 UNIT_ORDER와 같다: 보병 기보 정찰 전차 대형 신형 보급 자주 로켓 대공 미사 전투 폭격 공헬 수헬 전함 순양 수송 잠수 */
 const _ = null;
 const DMG = {
   inf:    {sec:[55,45,12, 5, 1, 1,14,15,25, 5,25, _, _, 7,30, _, _, _, _]},
@@ -674,27 +674,27 @@ const DMG = {
 /* 지휘관: 붉은별 사령부. 이름·얼굴·대사는 동현전의 창작이다.
    능력의 틀(균형형·근접형·보병형·행운형·절약형)은 고전 전술 게임 지휘관 구성에서 흔한 원형을 참고했다. */
 const COS = [
-  {id:1, name:'한결', role:'정비형 균형 지휘관', color:'#d8483a',
+  {id:1, name:'뭉치', role:'정비형 균형 지휘관', color:'#d8483a',
    passive:'특별한 강점도 약점도 없다. 어떤 지도에서도 무난하다.',
    cop:{name:'응급 정비', stars:3, text:'모든 아군 체력 +2'},
    scop:{name:'총력 정비', stars:6, text:'모든 아군 체력 +5 · 공격 +10% · 이동 +1'},
    line:'고장 난 건 고치면 된다. 다시 가자.'},
-  {id:2, name:'무쇠', role:'근접 돌파 지휘관', color:'#b9452e',
+  {id:2, name:'뚱띠', role:'근접 돌파 지휘관', color:'#b9452e',
    passive:'보병이 아닌 근접 공격 유닛 공격 +20%. 간접 공격 유닛은 공격 −10%, 최대 사거리 −1.',
    cop:{name:'철갑 돌격', stars:3, text:'근접 차량·항공·함정 공격 +10%p 추가 · 이동 +1'},
    scop:{name:'무쇠 폭풍', stars:6, text:'근접 차량·항공·함정 공격 +30%p 추가 · 이동 +2'},
    line:'정면으로 부딪치면 길이 생긴다.'},
-  {id:3, name:'새벽', role:'보병·점령 지휘관', color:'#e0663f',
+  {id:3, name:'또치', role:'보병·점령 지휘관', color:'#e0663f',
    passive:'보병·기계화보병 공격 +20%, 점령 속도 1.5배. 수송 유닛 이동 +1. 그 밖의 근접 유닛 공격 −10%.',
    cop:{name:'새벽 행군', stars:3, text:'보병류 이동 +1 · 공격 +10%p 추가'},
    scop:{name:'해 뜨는 진격', stars:8, text:'보병류 이동 +2 · 공격 +20%p 추가 · 점령을 한 번에 끝낸다'},
    line:'깃발은 발로 꽂는 것이다.'},
-  {id:4, name:'다행', role:'행운형 지휘관', color:'#f08a4b',
+  {id:4, name:'포동이', role:'행운형 지휘관', color:'#f08a4b',
    passive:'공격할 때 운 보정이 0–19로 넓다. 일반 지휘관은 0–9.',
    cop:{name:'네잎 행운', stars:3, text:'운 보정 0–59'},
    scop:{name:'대박 행운', stars:6, text:'운 보정 0–99'},
    line:'오늘은 왠지 잘 맞을 것 같아.'},
-  {id:5, name:'곳간', role:'절약·보급 지휘관', color:'#c75b39',
+  {id:5, name:'뿡뿡', role:'절약·보급 지휘관', color:'#c75b39',
    passive:'모든 유닛 생산 비용 90%.',
    cop:{name:'반값 장터', stars:2, text:'이번 턴 생산 비용 50%'},
    scop:{name:'골목 상회', stars:5, text:'생산 비용 50% · 아군 도시에서도 지상 유닛 생산'},
@@ -1198,7 +1198,7 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     if(budget>=42000 && affordable('bship')) return 'bship';
     return null;
   }
-  // 공장(또는 곳간의 도시)
+  // 공장(또는 뿡뿡의 도시)
   const wantFoot = myFoot < 2 + Math.min(6, Math.ceil(neutralLeft/3));
   if(wantFoot && (budget<9000 || myFoot<3 || left>1)){
     if(enemyArmor>=2 && affordable('mech') && budget>=9000) return 'mech';
@@ -1800,20 +1800,20 @@ const block=(label,...ns)=>'ㅋㅋ '+label+'\n'+output(...ns);
 const wrap=a=>['나는 동현이냐?',...a,'동현이구나'].join('\n');
 const sortie=block('출전',6);
 const examples=[
- {id:'practice',title:'01 · 작은 연습장 / 한결 대 한결',note:'12×8의 작은 지도에서 한 판을 빠르게 익힌다. 같은 지휘관끼리, 내가 먼저 움직인다.',
-  code:wrap([block('지도 1 · 작은 연습장',1,1),block('나의 지휘관 1 · 한결',2,1),block('컴퓨터 지휘관 1 · 한결',3,1),block('선공 1 · 내가 먼저',4,1),sortie])},
- {id:'field',title:'02 · 첫 들판 / 무쇠 대 다행',note:'강과 다리가 있는 지상전. 무쇠의 근접 전차로 다리를 먼저 차지해 보자.',
-  code:wrap([block('지도 2 · 첫 들판',1,2),block('나의 지휘관 2 · 무쇠',2,2),block('컴퓨터 지휘관 4 · 다행',3,4),sortie])},
- {id:'strait',title:'03 · 푸른 해협 / 새벽 대 곳간',note:'바다·공항·항구가 모두 있는 지도. 시작 자금 5000으로 보병을 서둘러 내보내 거점을 넓힌다.',
-  code:wrap([block('지도 3 · 푸른 해협',1,3),block('나의 지휘관 3 · 새벽',2,3),block('컴퓨터 지휘관 5 · 곳간',3,5),block('시작 자금 5000',5,5000),sortie])},
+ {id:'practice',title:'01 · 작은 연습장 / 뭉치 대 뭉치',note:'12×8의 작은 지도에서 한 판을 빠르게 익힌다. 같은 지휘관끼리, 내가 먼저 움직인다.',
+  code:wrap([block('지도 1 · 작은 연습장',1,1),block('나의 지휘관 1 · 뭉치',2,1),block('컴퓨터 지휘관 1 · 뭉치',3,1),block('선공 1 · 내가 먼저',4,1),sortie])},
+ {id:'field',title:'02 · 첫 들판 / 뚱띠 대 포동이',note:'강과 다리가 있는 지상전. 뚱띠의 근접 전차로 다리를 먼저 차지해 보자.',
+  code:wrap([block('지도 2 · 첫 들판',1,2),block('나의 지휘관 2 · 뚱띠',2,2),block('컴퓨터 지휘관 4 · 포동이',3,4),sortie])},
+ {id:'strait',title:'03 · 푸른 해협 / 또치 대 뿡뿡',note:'바다·공항·항구가 모두 있는 지도. 시작 자금 5000으로 보병을 서둘러 내보내 거점을 넓힌다.',
+  code:wrap([block('지도 3 · 푸른 해협',1,3),block('나의 지휘관 3 · 또치',2,3),block('컴퓨터 지휘관 5 · 뿡뿡',3,5),block('시작 자금 5000',5,5000),sortie])},
  {id:'ridge',title:'04 · 산맥 회랑 / 컴퓨터 선공',note:'산맥 사이 두 길을 두고 겨룬다. 이번에는 컴퓨터가 먼저 움직인다.',
-  code:wrap([block('지도 4 · 산맥 회랑',1,4),block('나의 지휘관 5 · 곳간',2,5),block('컴퓨터 지휘관 2 · 무쇠',3,2),block('선공 2 · 컴퓨터가 먼저',4,2),sortie])},
+  code:wrap([block('지도 4 · 산맥 회랑',1,4),block('나의 지휘관 5 · 뿡뿡',2,5),block('컴퓨터 지휘관 2 · 뚱띠',3,2),block('선공 2 · 컴퓨터가 먼저',4,2),sortie])},
  {id:'vars',title:'05 · 변수로 고르기 / 시드 고정',note:'동현에 지도 번호, 동동현에 지휘관 번호를 담아 출력한다. 시드를 고정하면 같은 선택에서 같은 운이 나온다.',
   code:wrap(['ㅋㅋ 동현 = 지도 번호, 동동현 = 지휘관 번호','동현아 '+expression(2),'동동현아 '+expression(4),
    'ㅋㅋ 지도와 나의 지휘관','뿡뿡 도옹~뿡뿡뿡~뿡뿡 동현~뿡뿡뿡','뿡뿡 도오옹~뿡뿡뿡~뿡뿡 동동현~뿡뿡뿡',
    'ㅋㅋ 컴퓨터 지휘관은 내 번호에서 하나 뺀 값','뿡뿡 도오오옹~뿡뿡뿡~뿡뿡 동동현ㅠ~뿡뿡뿡',
    block('난수 시드 2026',7,2026),sortie])},
- {id:'blank',title:'06 · 빈 코드 / 직접 작성',note:'시작·끝 선언만 있다. 출전 명령 6이 없으면 전장에 나가지 않는다. 나머지는 기본값(지도 1 · 한결 대 한결 · 나 선공 · 자금 0)이다.',code:wrap([])}
+ {id:'blank',title:'06 · 빈 코드 / 직접 작성',note:'시작·끝 선언만 있다. 출전 명령 6이 없으면 전장에 나가지 않는다. 나머지는 기본값(지도 1 · 뭉치 대 뭉치 · 나 선공 · 자금 0)이다.',code:wrap([])}
 ];
 if(typeof module!=='undefined') module.exports={examples,expression};
 

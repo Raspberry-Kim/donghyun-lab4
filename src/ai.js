@@ -136,7 +136,7 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     if(budget>=42000 && affordable('bship')) return 'bship';
     return null;
   }
-  // 공장(또는 곳간의 도시)
+  // 공장(또는 뿡뿡의 도시)
   const wantFoot = myFoot < 2 + Math.min(6, Math.ceil(neutralLeft/3));
   if(wantFoot && (budget<9000 || myFoot<3 || left>1)){
     if(enemyArmor>=2 && affordable('mech') && budget>=9000) return 'mech';
