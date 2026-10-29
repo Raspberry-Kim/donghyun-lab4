@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "Donghyunjeon (동현전): a single-player turn-based strategy simulation laboratory against the computer, set up through the esoteric language Donghyun-lang"
+type: software
+version: "0.1"
+date-released: "2026-10-29"
+authors:
+  - family-names: Kim
+    given-names: Dong Hyun
+    orcid: "https://orcid.org/0000-0001-9883-0229"
+    affiliation: "Inha University College of Medicine"
+license: MIT
+repository-code: "https://github.com/Raspberry-Kim/donghyun-lab4"
+url: "https://raspberry-kim.github.io/donghyun-lab4/"
+abstract: >-
+  Donghyunjeon is a browser-based, noncommercial turn-based strategy
+  simulation laboratory for one player against a computer opponent (normal
+  difficulty, no fog of war). The map, commanders, first move and starting
+  funds are chosen only through programs written in the esoteric programming
+  language Donghyun-lang; the battle itself is played with the keyboard
+  (arrow keys, X confirm, Z cancel, S next unit, A info) or on-screen buttons.
+  It includes 20 original maps built with two-fold rotational symmetry,
+  five original commanders, a heuristic computer opponent, and saving and
+  loading in browser slots or as files. It is a fan-inspired hobby work in
+  the genre of grid tactics games; it is not affiliated with or endorsed by
+  Nintendo or Intelligent Systems, and it contains none of their sprites,
+  names, maps or music. All art, names and maps are original. The MIT license
+  applies to the application code, documentation and artwork; the fonts are
+  under the SIL Open Font License. See LICENSE and CREDITS.md.
+keywords:
+  - turn-based strategy
+  - tactics game
+  - game AI
+  - pixel art
+  - esoteric programming language
+  - JavaScript
+references:
+  - type: software
+    title: "Donghyun-lang (동현랭): a Korean esoteric programming language with a browser playground"
+    authors:
+      - family-names: Kim
+        given-names: Dong Hyun
+        orcid: "https://orcid.org/0000-0001-9883-0229"
+        affiliation: "Inha University College of Medicine"
+    version: "1.53"
+    license: MIT
+    repository-code: "https://github.com/Raspberry-Kim/donghyun-lang"
