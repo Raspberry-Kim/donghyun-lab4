@@ -22,8 +22,8 @@
     <div><div class="eyebrow">TURN-BASED TACTICS × ESOTERIC LANGUAGE</div><h1>전략 시뮬레이션 실험실: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 참전하는 턴제 전략 시뮬레이션 게임이다.</p></div>
     <div class="model-stamp"><strong>1 <span>대</span> CPU</strong><strong>19 <span>병종</span></strong><small>난이도 보통 · 안개 없음 · 지도 20종</small></div>
   </section>
-  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현전 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>참전은 동현랭으로, 전쟁은 키보드로</span></nav>
-  <div class="getting-started"><p><strong>처음이라면?</strong> 예제를 고르고 <b>출전</b>을 눌러 보자. 지도·지휘관·선공·시작 자금은 모두 동현랭 명령으로만 정한다.</p><a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭 배우기 · 실행기 ↗</a></div>
+  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현전 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">모델과 출처</button><span>참전은 동현랭으로, 전투는 키보드로</span></nav>
+  <div class="getting-started"><p><strong>처음이라면?</strong> 예제를 고르고 <b>출전</b>을 눌러 보자. 지도·지휘관·선공·시작 자금은 모두 <b>동현랭</b> 명령으로만 정한다.</p><a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭 배우기 · 실행기 ↗</a></div>
 
   <section id="tab-play" class="tab-panel">
     <div class="play-grid" id="play-grid">
@@ -73,13 +73,13 @@
     <div class="table-wrap"><table><thead><tr><th>명령</th><th>하는 일</th><th>값</th><th>기본값</th></tr></thead><tbody>
       <tr><td>1</td><td>지도</td><td>1 작은 연습장 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑 · 5 쌍둥이 다리 · 6 숲속 오솔길 · 7 모래톱 해안 · 8 세 갈래 길 · 9 호수 마을 · 10 바위 고개 · 11 두 섬 다리 · 12 강 삼각주 · 13 하늘 기지 · 14 십자 도로 · 15 바다 요새 · 16 들꽃 평원 · 17 겹겹 산성 · 18 쌍둥이 섬 · 19 긴 해안선 · 20 최후의 전선</td><td>1</td></tr>
       <tr><td>2</td><td>나의 지휘관</td><td>1 뭉치 · 2 뚱띠 · 3 또치 · 4 포동이 · 5 뿡뿡</td><td>1</td></tr>
-      <tr><td>3</td><td>컴퓨터 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
-      <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 컴퓨터가 먼저</td><td>1</td></tr>
+      <tr><td>3</td><td>CPU 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
+      <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 CPU가 먼저</td><td>1</td></tr>
       <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액</td><td>0</td></tr>
       <tr><td>7</td><td>난수 시드</td><td>1~2147483646 · 같은 시드는 같은 운</td><td>매번 새로</td></tr>
       <tr><td>6</td><td>출전</td><td>값 없음 · 반드시 마지막에</td><td>—</td></tr>
     </tbody></table></div>
-    <div class="doc-columns"><div><h3>고정된 조건</h3><p>컴퓨터 난이도는 보통, 전장의 안개는 없다. 사람 한 명과 컴퓨터 한 명만 겨룬다. 여러 사람이 번갈아 하는 대전, 네트워크 대전, 이야기 진행 모드는 없다.</p><p>같은 명령을 여러 번 출력하면 마지막 값이 쓰인다. 범위를 벗어난 값, 짝이 없는 명령, 6 뒤의 출력은 오류로 알려 주고 전장에 나가지 않는다.</p></div>
+    <div class="doc-columns"><div><h3>고정된 조건</h3><p>CPU 난이도는 보통, 전장의 안개는 없다. 사람 한 명과 CPU 한 명만 겨룬다. 여러 사람이 번갈아 하는 대전, 네트워크 대전, 이야기 진행 모드는 없다.</p><p>같은 명령을 여러 번 출력하면 마지막 값이 쓰인다. 범위를 벗어난 값, 짝이 없는 명령, 6 뒤의 출력은 오류로 알려 주고 전장에 나가지 않는다.</p></div>
     <div><h3>예시</h3><pre class="code-example">나는 동현이냐?
   ㅋㅋ 지도 2 · 첫 들판
   뿡뿡 도옹~뿡뿡뿡~뿡뿡 도오옹~뿡뿡뿡
@@ -93,7 +93,7 @@
     <div class="doc-columns"><div><h3>키보드</h3><table class="key-table"><tbody>
       <tr><td><kbd>←↑↓→</kbd></td><td>커서 이동, 메뉴 고르기, 공격 대상 바꾸기</td></tr>
       <tr><td><kbd>X</kbd></td><td>유닛 선택 · 이동 확정 · 명령 실행 · 생산</td></tr>
-      <tr><td><kbd>Z</kbd></td><td>취소 · 한 단계 뒤로. 컴퓨터 차례에는 빨리 감기</td></tr>
+      <tr><td><kbd>Z</kbd></td><td>취소 · 한 단계 뒤로. CPU 차례에는 빨리 감기</td></tr>
       <tr><td><kbd>S</kbd></td><td>아직 움직이지 않은 다음 유닛으로</td></tr>
       <tr><td><kbd>A</kbd></td><td>커서 아래 유닛·지형 정보</td></tr>
       <tr><td><kbd>Shift</kbd></td><td>누르고 있는 동안 커서 아래 유닛의 공격 범위</td></tr>
@@ -114,13 +114,13 @@
   </section>
 
   <section id="tab-about" class="tab-panel document" hidden>
-    <div class="doc-heading"><div class="eyebrow">WHAT IS NEW, WHAT IS BORROWED</div><h2>규칙의 뼈대는 고전 전술 게임에서, 나머지는 새로 만들었다.</h2><p>동현전은 격자 위 턴제 전술 게임의 오래된 규칙 틀(점령·생산·연료·탄약·지형 방어·지휘관 능력)을 따른다. 그림, 지도, 지휘관 이름·성격·대사, 피해표 수치, 컴퓨터 판단은 동현전에서 새로 정했다.</p></div>
+    <div class="doc-heading"><div class="eyebrow">WHAT IS NEW, WHAT IS BORROWED</div><h2>규칙의 뼈대는 고전 전술 게임에서, 나머지는 새로 만들었다.</h2><p>동현전은 격자 위 턴제 전술 게임의 오래된 규칙 틀(점령·생산·연료·탄약·지형 방어·지휘관 능력)을 따른다. 그림, 지도, 지휘관 이름·성격·대사, 피해표 수치, CPU 판단은 동현전에서 새로 정했다.</p></div>
     <div class="science-block"><span class="index">01</span><div><h3>원작의 그림·이름·지도·음악은 담지 않았다.</h3><p>닌텐도의 원작 그래픽·캐릭터·지도·음악은 쓰지 않는다. 지휘관은 원작 붉은별(레드 스타) 진영 지휘관 구성에서 흔한 원형(균형·근접·보병·행운·절약)만 참고해 새 인물로 만들었다. 이 게임은 닌텐도·인텔리전트 시스템즈와 관계가 없다.</p></div></div>
     <div class="science-block"><span class="index">02</span><div><h3>병종의 가격·이동·연료·탄약은 공개 해설을 참고했다.</h3><p>병종의 기본 수치와 지형 방어, 점령값 20, 거점 수입 1000, 거점 회복 +2는 공개 해설 문서(나무위키 「패미컴 워즈」 공통 유닛·지형 항목)를 참고했다. 피해표의 칸별 값은 동현전에서 따로 조정했다.</p></div></div>
     <div class="science-block"><span class="index">03</span><div><h3>코드와 글꼴의 이용 조건</h3><p>동현전 코드는 MIT, 글꼴(검은고딕 Black Han Sans · Pretendard · 나눔고딕코딩)은 SIL Open Font License를 따른다. 동현랭 실행기는 동현랭 저장소의 MIT 코드를 그대로 쓴다.</p></div></div>
     <aside class="maker-note"><span class="eyebrow">만든 사람</span><p>인하대학교 의과대학 김동현 교수는 백신학·감염학을 연구한다. 동현전은 동현랭 시리즈의 다섯 번째 프로젝트이다.</p></aside>
   </section>
 </main>
-<footer><span>동현전 v0.1 · 인하대학교 의과대학 교수 김동현</span><span>1인용 대 컴퓨터 · 난이도 보통 · 안개 없음</span><span><a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭</a> · <a href="https://github.com/Raspberry-Kim/donghyun-lang" target="_blank" rel="noopener">동현랭 GitHub</a> · <a href="https://github.com/Raspberry-Kim/donghyun-lab4" target="_blank" rel="noopener">동현전 GitHub</a> · <a href="https://raspberry-kim.github.io/donghyun-lab1/" target="_blank" rel="noopener">동현초</a> · <a href="https://raspberry-kim.github.io/donghyun-lab2/" target="_blank" rel="noopener">동현파</a> · <a href="https://raspberry-kim.github.io/donghyun-lab3/" target="_blank" rel="noopener">동현빌</a></span></footer>
+<footer><span>동현전 v0.1 · 인하대학교 의과대학 교수 김동현</span><span>1인용 대 CPU · 난이도 보통 · 안개 없음</span><span><a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭</a> · <a href="https://github.com/Raspberry-Kim/donghyun-lang" target="_blank" rel="noopener">동현랭 GitHub</a> · <a href="https://github.com/Raspberry-Kim/donghyun-lab4" target="_blank" rel="noopener">동현전 GitHub</a> · <a href="https://raspberry-kim.github.io/donghyun-lab1/" target="_blank" rel="noopener">동현초</a> · <a href="https://raspberry-kim.github.io/donghyun-lab2/" target="_blank" rel="noopener">동현파</a> · <a href="https://raspberry-kim.github.io/donghyun-lab3/" target="_blank" rel="noopener">동현빌</a></span></footer>
 <script src="./game.js"></script>
 </body></html>
