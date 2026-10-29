@@ -341,13 +341,27 @@ const cache={};
 function sprite(type,owner,gray){
   const k=type+owner+(gray?'g':'');
   if(cache[k]) return cache[k];
-  const c=mk(T,T), x=c.getContext('2d'), P=PAL[owner], rows=SPR[type];
+  const c=mk(T,T), x=c.getContext('2d'), P=PAL[owner], rows=shade(SPR[type]);
   for(let y=0;y<T;y++){ const r=(rows[y]||'').padEnd(T,'.').slice(0,T);
     for(let i=0;i<T;i++){ const ch=r[i]; if(ch==='.') continue;
       let col=P[ch]||C[ch]; if(!col) continue;
       if(gray) col=grayify(col);
       const px=owner===2?T-1-i:i; x.fillStyle=col; x.fillRect(px,y,1,1); } }
   return cache[k]=c;
+}
+/* 자동 음영: 진영색(m) 칸 중 바로 위가 윤곽·빈칸이면 밝게(l), 바로 아래가 윤곽이면 어둡게(d).
+   금속(g)은 위쪽을 흰빛(w)으로 살짝 띄운다. 도트 원본은 그대로 두고 그릴 때만 바꾼다. */
+const shadeCache=new Map();
+function shade(rows){
+  if(shadeCache.has(rows)) return shadeCache.get(rows);
+  const R=rows.map(r=>r.padEnd(T,'.').slice(0,T).split('')), out=R.map(r=>r.slice());
+  const at=(x,y)=>(y<0||y>=R.length)?'.':R[y][x];
+  for(let y=0;y<R.length;y++) for(let x=0;x<T;x++){ const ch=R[y][x];
+    if(ch==='m'){ const up=at(x,y-1), dn=at(x,y+1);
+      if((up==='k'||up==='.') && at(x-1,y)!=='.' ) out[y][x]='l';
+      else if(dn==='k' && at(x,y+2)!=='m') out[y][x]='d'; }
+    else if(ch==='g'){ const up=at(x,y-1); if(up==='k'||up==='.') out[y][x]='w'; } }
+  const res=out.map(r=>r.join('')); shadeCache.set(rows,res); return res;
 }
 function grayify(hex){
   const n=parseInt(hex.slice(1),16), r=n>>16&255,g=n>>8&255,b=n&255, v=Math.round((r*.3+g*.55+b*.15)*.72+30);
@@ -358,7 +372,7 @@ function hash(x,y,s=0){ let h=(x*374761393+y*668265263+s*982451653)>>>0; h=(h^(h
 /* ---- 지형 ---- */
 const TC={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
   rock:'#a08467',rock2:'#7a604a',snow:'#f4efe4',water:'#4c8fd9',water2:'#3b78c4',wave:'#9cc6f2',sand:'#e9d79a',sand2:'#cdb876',
-  road:'#d3c7a6',road2:'#a39578',plank:'#a8784a',plank2:'#7d5530'};
+  road:'#d3c7a6',road2:'#a39578',road3:'#e3d9bc',plank:'#b8854f',plank2:'#7d5530',plank3:'#d9a66a',foam:'#e8f4ff',deep:'#4384d0',bank:'#6f9c3e',river:'#5aa0e6',river2:'#3f86d2'};
 const isWater=t=>t==='sea'||t==='reef'||t==='river'||t==='shoal'||t==='bridge';
 const seaLike=t=>t==='sea'||t==='reef';
 function drawTerrain(g,map,x,y){
@@ -366,10 +380,17 @@ function drawTerrain(g,map,x,y){
   const at=(dx,dy)=>{ const yy=y+dy,xx=x+dx; if(yy<0||xx<0||yy>=map.H||xx>=map.W) return null; return map.grid[yy][xx].t; };
   const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(X+a,Y+b,w,h); };
   const grass=()=>{ R(0,0,T,T,(x+y)%2?TC.grass:TC.grassB); for(let i=0;i<3;i++){ const h=hash(x,y,i); R(h%14+1,(h>>>4)%14+1,1,1,TC.grass2); R((h>>>8)%14+1,(h>>>12)%14+1,1,1,TC.grass3);} };
-  const sea=()=>{ R(0,0,T,T,TC.water); const h=hash(x,y,7); R(h%10+2,(h>>>5)%10+3,3,1,TC.wave); R((h>>>9)%10+2,(h>>>13)%10+3,2,1,TC.water2);
-    // 땅과 맞닿은 쪽에 모래 가장자리
+  const sea=()=>{ R(0,0,T,T,TC.water); for(let i=0;i<T;i+=4) for(let j=(i/4)%2*2;j<T;j+=4) R(j,i,1,1,TC.deep);
+    const h=hash(x,y,7); R(h%10+2,(h>>>5)%10+3,3,1,TC.wave); R((h>>>9)%10+2,(h>>>13)%10+3,2,1,TC.water2);
+    // 땅과 맞닿은 쪽에 모래 가장자리와 흰 물결
     const land=(dx,dy)=>{ const n=at(dx,dy); return n && !isWater(n); };
-    if(land(0,-1)) R(0,0,T,2,TC.sand); if(land(0,1)) R(0,T-2,T,2,TC.sand); if(land(-1,0)) R(0,0,2,T,TC.sand); if(land(1,0)) R(T-2,0,2,T,TC.sand); };
+    const U=land(0,-1),Dn=land(0,1),L=land(-1,0),Rt=land(1,0);
+    if(U){ R(0,0,T,2,TC.sand); R(0,2,T,1,TC.foam); } if(Dn){ R(0,T-2,T,2,TC.sand); R(0,T-3,T,1,TC.foam); }
+    if(L){ R(0,0,2,T,TC.sand); R(2,U?3:0,1,T-(U?3:0)-(Dn?3:0),TC.foam); } if(Rt){ R(T-2,0,2,T,TC.sand); R(T-3,U?3:0,1,T-(U?3:0)-(Dn?3:0),TC.foam); }
+    if(!U&&!L&&land(-1,-1)){ R(0,0,2,2,TC.sand); R(2,0,1,2,TC.foam); R(0,2,3,1,TC.foam); }
+    if(!U&&!Rt&&land(1,-1)){ R(T-2,0,2,2,TC.sand); R(T-3,0,1,2,TC.foam); R(T-3,2,3,1,TC.foam); }
+    if(!Dn&&!L&&land(-1,1)){ R(0,T-2,2,2,TC.sand); R(2,T-2,1,2,TC.foam); R(0,T-3,3,1,TC.foam); }
+    if(!Dn&&!Rt&&land(1,1)){ R(T-2,T-2,2,2,TC.sand); R(T-3,T-2,1,2,TC.foam); R(T-3,T-3,3,1,TC.foam); } };
   if(t==='plain'){ grass(); const h=hash(x,y,11); if(h%3===0){ const fx=2+h%11, fy=3+(h>>>5)%10; R(fx,fy,1,1,'#fff7e0'); R(fx+1,fy+1,1,1,(h>>>9)%2?'#ffd34d':'#ffb3c7'); } }
   else if(t==='forest'){ grass(); const pp=propPal(0); R(1,13,14,2,'rgba(20,30,10,.22)'); for(const [a,b] of [[5,-3],[1,3],[8,4]]) stamp(g,PROP.tree,X+a,Y+b,pp); }
   else if(t==='mountain'){ grass(); stamp(g,PROP.mountain,X,Y-4,propPal(0)); }
@@ -380,10 +401,15 @@ function drawTerrain(g,map,x,y){
     const col=t==='road'?TC.road:TC.water, edge=t==='road'?TC.road2:TC.water2;
     const up=conn(at(0,-1)),dn=conn(at(0,1)),lf=conn(at(-1,0)),rt=conn(at(1,0));
     const any=up||dn||lf||rt;
-    if(t==='bridge'){ // 다리 밑 물: 강이나 바다 쪽 방향
-      const wv=n=>n&&(n==='river'||seaLike(n)||n==='shoal'||n==='bridge');
-      const vert=wv(at(0,-1))||wv(at(0,1));
-      R(0,0,T,T,TC.water); if(vert){ R(0,3,T,10,TC.plank); for(let i=0;i<T;i+=3) R(i,3,1,10,TC.plank2); R(0,3,T,1,TC.plank2); R(0,12,T,1,TC.plank2);} else { R(3,0,10,T,TC.plank); for(let i=0;i<T;i+=3) R(3,i,10,1,TC.plank2); R(3,0,1,T,TC.plank2); R(12,0,1,T,TC.plank2);} 
+    if(t==='bridge'){
+      const pass=n=>n&&!(seaLike(n)||n==='river'||n==='shoal'||n==='port');
+      const hz=pass(at(-1,0))||pass(at(1,0)), vt=pass(at(0,-1))||pass(at(0,1));
+      const under=[at(0,-1),at(0,1),at(-1,0),at(1,0)].some(n=>n&&seaLike(n));
+      if(under) sea(); else { R(0,0,T,T,TC.river); R(2,6,3,1,TC.wave); R(10,10,3,1,TC.wave); }
+      if(vt&&!hz){ R(2,0,12,T,'rgba(20,40,70,.25)'); R(3,0,10,T,TC.plank); for(let i=1;i<T;i+=3) R(3,i,10,1,TC.plank2); R(4,0,1,T,TC.plank3);
+        R(2,0,1,T,C.k); R(13,0,1,T,C.k); R(1,2,1,3,TC.plank2); R(14,2,1,3,TC.plank2); R(1,10,1,3,TC.plank2); R(14,10,1,3,TC.plank2); }
+      else { R(0,4,T,10,'rgba(20,40,70,.25)'); R(0,3,T,10,TC.plank); for(let i=1;i<T;i+=3) R(i,3,1,10,TC.plank2); R(0,4,T,1,TC.plank3);
+        R(0,2,T,1,C.k); R(0,13,T,1,C.k); R(2,1,3,1,TC.plank2); R(10,1,3,1,TC.plank2); R(2,14,3,1,TC.plank2); R(10,14,3,1,TC.plank2); }
     } else if(t==='road'){
       // 도로는 칸을 채우고, 이어지지 않은 쪽에만 풀밭 가장자리를 남긴다
       R(0,0,T,T,col);
@@ -392,11 +418,21 @@ function drawTerrain(g,map,x,y){
       if(!lf){ R(0,0,3,T,TC.grass); R(3,up?0:3,1,T-(up?0:3)-(dn?0:3),edge); }
       if(!rt){ R(T-3,0,3,T,TC.grass); R(T-4,up?0:3,1,T-(up?0:3)-(dn?0:3),edge); }
       if(!up&&!lf) R(0,0,4,4,TC.grass); if(!up&&!rt) R(T-4,0,4,4,TC.grass); if(!dn&&!lf) R(0,T-4,4,4,TC.grass); if(!dn&&!rt) R(T-4,T-4,4,4,TC.grass);
-      const h=hash(x,y,9); R(4+h%8,4+(h>>>4)%8,1,1,edge);
+      if(!up&&!lf) R(3,3,1,1,edge); if(!up&&!rt) R(T-4,3,1,1,edge); if(!dn&&!lf) R(3,T-4,1,1,edge); if(!dn&&!rt) R(T-4,T-4,1,1,edge);
+      // 가운데 밝은 바퀴 자국
+      if(lf||rt){ const a=lf?0:7,b=rt?T:8; R(a,7,b-a,1,TC.road3); }
+      if(up||dn){ const a=up?0:7,b=dn?T:8; R(7,a,1,b-a,TC.road3); }
+      const h=hash(x,y,9); R(4+h%8,4+(h>>>4)%8,1,1,edge); R(4+(h>>>8)%8,4+(h>>>12)%8,1,1,TC.road3);
     } else {
-      R(4,4,8,8,col);
-      if(up||!any) R(4,0,8,5,col); if(dn||!any) R(4,11,8,5,col); if(lf) R(0,4,5,8,col); if(rt) R(11,4,5,8,col);
-      const h=hash(x,y,3); R(6+(h%3),6+(h>>>3)%3,2,1,TC.wave);
+      // 강: 칸을 물로 채우고, 물이 이어지지 않는 쪽에 풀 둑을 남긴다
+      R(0,0,T,T,TC.river);
+      const B=3;
+      if(!up){ R(0,0,T,B,TC.grass); R(0,B,T,1,TC.bank); }
+      if(!dn){ R(0,T-B,T,B,TC.grass); R(0,T-B-1,T,1,TC.bank); }
+      if(!lf){ R(0,0,B,T,TC.grass); R(B,up?0:B,1,T-(up?0:B)-(dn?0:B),TC.bank); }
+      if(!rt){ R(T-B,0,B,T,TC.grass); R(T-B-1,up?0:B,1,T-(up?0:B)-(dn?0:B),TC.bank); }
+      if(!up&&!lf) R(0,0,B+1,B+1,TC.grass); if(!up&&!rt) R(T-B-1,0,B+1,B+1,TC.grass); if(!dn&&!lf) R(0,T-B-1,B+1,B+1,TC.grass); if(!dn&&!rt) R(T-B-1,T-B-1,B+1,B+1,TC.grass);
+      const h=hash(x,y,3); R(5+(h%4),5+(h>>>3)%3,3,1,TC.wave); R(4+(h>>>6)%5,9+(h>>>9)%2,2,1,TC.river2);
     }
   }
   else if(t==='sea') sea();
@@ -463,6 +499,10 @@ function draw(g, s, ui, now){
   if(!ui.terrain || ui.terrainKey!==ui.terrainVer){ ui.terrain=terrainLayer(map); ui.terrainKey=ui.terrainVer; }
   g.imageSmoothingEnabled=false;
   g.drawImage(ui.terrain,0,0); g.save(); g.translate(0,PAD);
+  // 물결 반짝임(지형층 위에 가볍게)
+  if(ui.seaKey!==ui.terrainKey){ ui.seaTiles=[]; for(let y=0;y<map.H;y++) for(let x=0;x<map.W;x++){ const t=map.grid[y][x].t; if(t==='sea'||t==='river') ui.seaTiles.push([x,y,t]); } ui.seaKey=ui.terrainKey; }
+  { const ph=Math.floor(now/650); g.fillStyle='rgba(235,246,255,.85)';
+    for(const [x,y,t] of ui.seaTiles){ const h=hash(x,y,ph&7); if(h%4) continue; const k=t==='river'?6:10; g.fillRect(x*T+3+(h>>>3)%k,y*T+3+(h>>>7)%k,2,1); } }
   // 이동 · 공격 범위
   if(ui.moveSet){ g.fillStyle='rgba(120,190,255,.48)'; for(const k of ui.moveSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
   if(ui.atkSet){ g.fillStyle='rgba(240,70,50,.42)'; for(const k of ui.atkSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }

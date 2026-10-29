@@ -61,7 +61,7 @@ let cfg={...DEFAULT};
 function parseSortie(out){
   const tok=out.split(/\s+/).filter(Boolean).map(Number), c={...DEFAULT}, err=[];
   let go=false;
-  const rule={1:['지도','map',v=>v>=1&&v<=4,'1~4'],2:['나의 지휘관','co1',v=>v>=1&&v<=5,'1~5'],3:['컴퓨터 지휘관','co2',v=>v>=1&&v<=5,'1~5'],
+  const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=5,'1~5'],3:['컴퓨터 지휘관','co2',v=>v>=1&&v<=5,'1~5'],
     4:['선공','first',v=>v===1||v===2,'1 또는 2'],5:['시작 자금','funds',v=>v>=0&&v<=30000&&v%1000===0,'0~30000, 1000 단위'],7:['난수 시드','seed',v=>v>=1&&v<=2147483646,'1~2147483646']};
   for(let i=0;i<tok.length;i++){
     const n=tok[i];

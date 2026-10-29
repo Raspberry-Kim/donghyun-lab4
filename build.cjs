@@ -14,4 +14,6 @@ const html=src('index.html')
 fs.writeFileSync(path.join(out,'index.html'),html);
 copyIcons(out);
 fs.cpSync(path.join(root,'licenses'),path.join(out,'licenses'),{recursive:true});
+// GitHub Pages는 저장소 루트를 그대로 쓴다: 루트 index.html도 같은 단일 파일로 둔다.
+fs.writeFileSync(path.join(root,'index.html'),html);
 console.log(JSON.stringify({bytes:Buffer.byteLength(html)}));
