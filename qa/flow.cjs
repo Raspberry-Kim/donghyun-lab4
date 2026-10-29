@@ -14,26 +14,26 @@ const {chromium}=require('playwright');
     const apc=mk('apc',1,8,7); const i2=mk('inf',1,8,7); i2.carried=true; apc.cargo.push(i2);
     window.__t={cityOwner:c.owner};});
   const go=async([tx,ty])=>{let c=(await st()).cursor;while(c[0]!==tx){await p.keyboard.press(c[0]<tx?'ArrowRight':'ArrowLeft');c=(await st()).cursor;}while(c[1]!==ty){await p.keyboard.press(c[1]<ty?'ArrowDown':'ArrowUp');c=(await st()).cursor;}};
-  const pick=async label=>{let a=await st();for(let i=0;i<10&&a.menu[a.menuIndex]!==label;i++){await p.keyboard.press('ArrowDown');a=await st();} if(a.menu[a.menuIndex]!==label) throw Error('no '+label+' in '+a.menu); await p.keyboard.press('z'); await p.waitForTimeout(150);};
+  const pick=async label=>{let a=await st();for(let i=0;i<10&&a.menu[a.menuIndex]!==label;i++){await p.keyboard.press('ArrowDown');a=await st();} if(a.menu[a.menuIndex]!==label) throw Error('no '+label+' in '+a.menu); await p.keyboard.press('x'); await p.waitForTimeout(150);};
   // 공격
-  await go([5,5]); await p.keyboard.press('z'); await p.waitForTimeout(50); await p.keyboard.press('z'); await p.waitForTimeout(100);
+  await go([5,5]); await p.keyboard.press('x'); await p.waitForTimeout(50); await p.keyboard.press('x'); await p.waitForTimeout(100);
   console.log('tank menu',(await st()).menu); await pick('공격');
   console.log('target mode',(await st()).mode); await p.screenshot({path:__dirname+'/shot-target.png'});
-  await p.keyboard.press('z'); await p.waitForTimeout(900);
+  await p.keyboard.press('x'); await p.waitForTimeout(900);
   console.log('after attack',JSON.stringify((await st()).units.filter(u=>u.x===6&&u.y===5||u.t==='tank')));
   await p.screenshot({path:__dirname+'/shot-attacked.png'});
   // 점령
-  await go([1,2]); await p.keyboard.press('z'); await p.keyboard.press('z'); await p.waitForTimeout(100);
+  await go([1,2]); await p.keyboard.press('x'); await p.keyboard.press('x'); await p.waitForTimeout(100);
   console.log('inf menu',(await st()).menu); await pick('점령');
   console.log('city cp',await p.evaluate(()=>{const c=__dongHyunJeon.state.map.grid[2][1];return [c.cp,c.capId,c.owner];}));
   // 하차
-  await go([8,7]); await p.keyboard.press('z'); await p.keyboard.press('z'); await p.waitForTimeout(100);
+  await go([8,7]); await p.keyboard.press('x'); await p.keyboard.press('x'); await p.waitForTimeout(100);
   console.log('apc menu',(await st()).menu); await pick('하차'); console.log('mode',(await st()).mode);
   await p.screenshot({path:__dirname+'/shot-unload.png'});
-  await p.keyboard.press('z'); await p.waitForTimeout(150);
+  await p.keyboard.press('x'); await p.waitForTimeout(150);
   console.log('after unload',JSON.stringify((await st()).units.filter(u=>u.o===1)));
   // S 정보, Shift 사거리
-  await go([6,5]); await p.keyboard.press('s'); await p.waitForTimeout(100); console.log('info',(await st()).menu); await p.keyboard.press('x');
+  await go([6,5]); await p.keyboard.press('a'); await p.waitForTimeout(100); console.log('info',(await st()).menu); await p.keyboard.press('z');
   // 지휘관 능력: 별을 채워서 사용
   await p.evaluate(()=>{__dongHyunJeon.state.players[1].meter=9000*6;});
   await p.keyboard.press('Enter'); await pick('무쇠 폭풍'); await p.waitForTimeout(1400);
@@ -46,6 +46,6 @@ const {chromium}=require('playwright');
   // 항복 → 결과 → 출전 준비
   await p.click('#concede'); await p.waitForTimeout(100); await pick('항복한다'); await p.waitForTimeout(200);
   console.log('over',(await st()).mode); await p.screenshot({path:__dirname+'/shot-over.png'});
-  await p.keyboard.press('z'); await p.waitForTimeout(200); console.log('setup',(await st()).mode, await p.isVisible('#setup-panel'));
+  await p.keyboard.press('x'); await p.waitForTimeout(200); console.log('setup',(await st()).mode, await p.isVisible('#setup-panel'));
   console.log('errors',errs); await b.close();
 })();

@@ -1,6 +1,6 @@
 /* 동현전 그림: 16px 칸의 도트 지형과 유닛. 모든 그림은 이 파일의 코드로 새로 그린다. */
 (function(root){
-const T=16;
+const T=16, PAD=4; // PAD: 맨 윗줄 산·건물 꼭대기가 잘리지 않게 둔 위 여백
 const PAL={
   1:{m:'#d8483a',d:'#8e2a22',l:'#f39a7c'},
   2:{m:'#3a6fd8',d:'#22408f',l:'#8db2f2'},
@@ -356,27 +356,23 @@ function grayify(hex){
 function hash(x,y,s=0){ let h=(x*374761393+y*668265263+s*982451653)>>>0; h=(h^(h>>>13))*1274126177>>>0; return (h^(h>>>16))>>>0; }
 
 /* ---- 지형 ---- */
-const TC={grass:'#8fc85b',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
+const TC={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
   rock:'#a08467',rock2:'#7a604a',snow:'#f4efe4',water:'#4c8fd9',water2:'#3b78c4',wave:'#9cc6f2',sand:'#e9d79a',sand2:'#cdb876',
-  road:'#c9bfa8',road2:'#a99f8a',plank:'#a8784a',plank2:'#7d5530'};
+  road:'#d3c7a6',road2:'#a39578',plank:'#a8784a',plank2:'#7d5530'};
 const isWater=t=>t==='sea'||t==='reef'||t==='river'||t==='shoal'||t==='bridge';
 const seaLike=t=>t==='sea'||t==='reef';
 function drawTerrain(g,map,x,y){
   const cell=map.grid[y][x], t=cell.t, X=x*T, Y=y*T;
   const at=(dx,dy)=>{ const yy=y+dy,xx=x+dx; if(yy<0||xx<0||yy>=map.H||xx>=map.W) return null; return map.grid[yy][xx].t; };
   const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(X+a,Y+b,w,h); };
-  const grass=()=>{ R(0,0,T,T,TC.grass); for(let i=0;i<3;i++){ const h=hash(x,y,i); R(h%14+1,(h>>4)%14+1,1,1,TC.grass2); R((h>>8)%14+1,(h>>12)%14+1,1,1,TC.grass3);} };
-  const sea=()=>{ R(0,0,T,T,TC.water); const h=hash(x,y,7); R(h%10+2,(h>>5)%10+3,3,1,TC.wave); R((h>>9)%10+2,(h>>13)%10+3,2,1,TC.water2);
+  const grass=()=>{ R(0,0,T,T,(x+y)%2?TC.grass:TC.grassB); for(let i=0;i<3;i++){ const h=hash(x,y,i); R(h%14+1,(h>>>4)%14+1,1,1,TC.grass2); R((h>>>8)%14+1,(h>>>12)%14+1,1,1,TC.grass3);} };
+  const sea=()=>{ R(0,0,T,T,TC.water); const h=hash(x,y,7); R(h%10+2,(h>>>5)%10+3,3,1,TC.wave); R((h>>>9)%10+2,(h>>>13)%10+3,2,1,TC.water2);
     // 땅과 맞닿은 쪽에 모래 가장자리
     const land=(dx,dy)=>{ const n=at(dx,dy); return n && !isWater(n); };
     if(land(0,-1)) R(0,0,T,2,TC.sand); if(land(0,1)) R(0,T-2,T,2,TC.sand); if(land(-1,0)) R(0,0,2,T,TC.sand); if(land(1,0)) R(T-2,0,2,T,TC.sand); };
   if(t==='plain') grass();
-  else if(t==='forest'){ grass(); for(const [a,b] of [[2,5],[8,2],[8,8]]){ R(a+2,b+6,2,3,TC.trunk); R(a,b+2,6,4,TC.tree2); R(a+1,b,4,5,TC.tree); R(a+2,b+1,1,1,TC.grass3);} }
-  else if(t==='mountain'){ grass();
-    for(let r=0;r<12;r++){ const y0=3+r, half=Math.floor(r*0.62)+1, cx=8;
-      R(cx-half-1,y0,1,1,C.k); R(cx+half,y0,1,1,C.k);
-      R(cx-half,y0,half,1,r<3?TC.snow:TC.rock); R(cx,y0,half,1,r<2?TC.snow:TC.rock2); }
-    R(1,15,14,1,C.k); R(7,2,2,1,C.k); R(5,9,2,1,TC.rock2); R(10,11,2,1,TC.rock); }
+  else if(t==='forest'){ grass(); const pp=propPal(0); R(1,13,14,2,'rgba(20,30,10,.22)'); for(const [a,b] of [[5,-3],[1,3],[8,4]]) stamp(g,PROP.tree,X+a,Y+b,pp); }
+  else if(t==='mountain'){ grass(); stamp(g,PROP.mountain,X,Y-4,propPal(0)); }
   else if(t==='road'||t==='bridge'||t==='river'){
     if(t==='road') grass(); else { grass(); }
     const conn=n=>{ if(!n) return false; if(t==='river') return n==='river'||n==='bridge'||seaLike(n)||n==='shoal';
@@ -396,32 +392,64 @@ function drawTerrain(g,map,x,y){
       if(!lf){ R(0,0,3,T,TC.grass); R(3,up?0:3,1,T-(up?0:3)-(dn?0:3),edge); }
       if(!rt){ R(T-3,0,3,T,TC.grass); R(T-4,up?0:3,1,T-(up?0:3)-(dn?0:3),edge); }
       if(!up&&!lf) R(0,0,4,4,TC.grass); if(!up&&!rt) R(T-4,0,4,4,TC.grass); if(!dn&&!lf) R(0,T-4,4,4,TC.grass); if(!dn&&!rt) R(T-4,T-4,4,4,TC.grass);
-      const h=hash(x,y,9); R(4+h%8,4+(h>>4)%8,1,1,edge);
+      const h=hash(x,y,9); R(4+h%8,4+(h>>>4)%8,1,1,edge);
     } else {
       R(4,4,8,8,col);
       if(up||!any) R(4,0,8,5,col); if(dn||!any) R(4,11,8,5,col); if(lf) R(0,4,5,8,col); if(rt) R(11,4,5,8,col);
-      const h=hash(x,y,3); R(6+(h%3),6+(h>>3)%3,2,1,TC.wave);
+      const h=hash(x,y,3); R(6+(h%3),6+(h>>>3)%3,2,1,TC.wave);
     }
   }
   else if(t==='sea') sea();
   else if(t==='reef'){ sea(); R(3,8,4,3,TC.rock2); R(4,7,2,1,TC.rock); R(9,4,3,3,TC.rock2); R(10,3,1,1,TC.rock); R(10,10,3,2,TC.rock); }
-  else if(t==='shoal'){ R(0,0,T,T,TC.sand); const h=hash(x,y,5); R(h%10+2,(h>>4)%10+3,2,1,TC.sand2); R((h>>8)%10+3,(h>>12)%10+2,1,1,TC.sand2);
+  else if(t==='shoal'){ R(0,0,T,T,TC.sand); const h=hash(x,y,5); R(h%10+2,(h>>>4)%10+3,2,1,TC.sand2); R((h>>>8)%10+3,(h>>>12)%10+2,1,1,TC.sand2);
     const w=(dx,dy)=>{const n=at(dx,dy);return n&&seaLike(n);};
     if(w(0,-1)) R(0,0,T,3,TC.water); if(w(0,1)) R(0,T-3,T,3,TC.water); if(w(-1,0)) R(0,0,3,T,TC.water); if(w(1,0)) R(T-3,0,3,T,TC.water); }
-  else drawProperty(g,cell,X,Y,at);
+  else { if(cell.t!=='port') grass(); drawProperty(g,cell,X,Y,at); }
 }
+/* 건물·산·나무 도트: 칸보다 4px 높게 그려 위 칸에 살짝 겹친다(아래 줄이 나중에 그려진다). */
+const PROP={
+city:[
+'................','..kkkkk.........','.klllllk........','.kmmmmmdk.......','.kmwmwmdk.......','.kmmmmmdk.......',
+'.kmwmwmdkkkkkk..','.kmmmmmdklllldk.','.kmwmwmdkmmmmdk.','.kmmmmmdkmwwmdk.','.kmwmwmdkmmmmdk.','.kmmmmmdkmwwmdk.',
+'.kmwmwmdkmmmmdk.','.kmmmmmdkmmmmdk.','.kmmkkmdkmkkmdk.','.kmmkkmdkmkkmdk.','.kkkkkkkkkkkkkk.','..SSSSSSSSSSSSS.'],
+factory:[
+'...........kk...','..........kGGk..','..........kggk..','..........kggk..','..........kggk..','.kk..kk...kggk..',
+'kmmk.kmmk.kggk..','kmmmkkmmmkkggkk.','kllllllllllllldk','kmmmmmmmmmmmmmdk','kmkkkkkkkkkkkmdk','kmkGgGgGgGgGkmdk',
+'kmkgGgGgGgGgkmdk','kmkGgGgGgGgGkmdk','kmkgGgGgGgGgkmdk','kmkkkkkkkkkkkmdk','kkkkkkkkkkkkkkkk','.SSSSSSSSSSSSSS.'],
+airport:[
+'................','..........kkkkk.','..........kwwwk.','..........kkkkk.','...........kmk..','...........kdk..',
+'...kkkk....kmk..','.kkllllkk..kdk..','kllllllllk.kmk..','kmmmmmmmdk.kdk..','kmkkkkkmdk.kmk..','kmkGgGkmdk.kdk..',
+'kmkgGgkmdk.kmk..','kmkGgGkmdkkkkkk.','kkkkkkkkkk.SSSS.','.SSSSSSSS.......'],
+port:[
+'........kkkkkkk.','.......kmmmmmmmk','.......kkkkkkkk.','........kgk..k..','........kgk..k..','........kgk.kGk.',
+'........kgk.kkk.','........kgk.....','...kkkkkkgkk....','..kmmmmmmmmdk...','..kmwwmmmmmdk...','..kmmmmmmmmdk...','..kkkkkkkkkkk...'],
+hq:[
+'.......kyyyk....','.......kyyk.....','.......kk.......','.......kk.......','.....kkkkkk.....','....kllllldk....',
+'....kmmmmmdk....','...kkkkkkkkkk...','..klllllllllk...','.kkkkkkkkkkkkkk.','.kmmmmmmmmmmmdk.','.kmwkmwkmwkmmdk.',
+'.kmwkmwkmwkmmdk.','.kmwkmwkmwkmmdk.','.kmmmmmmmmmmmdk.','.kmmmmkkkmmmmdk.','.kkkkkkkkkkkkkk.','..SSSSSSSSSSSSS.'],
+mountain:[
+'................','.......kk.......','......kwwk......','.....kwwwRk.....','.....kwwrRk.....','....krrwrRRk....',
+'....krrrrRRk....','...krrrrrRRRk...','...krrrrrRRRk...','..krrrrrrRRRRk..','..krrrrrRRRRRk..','.krrrrrrRRRRRRk.',
+'.krrrrrrRRRRRRk.','krrrrrrrRRRRRRRk','krrrrrrRRRRRRRRk','kkkkkkkkkkkkkkkk','.SSSSSSSSSSSSSS.'],
+tree:[
+'..kkk..','.kaabk.','kaabbbk','kabbbck','kbbbcck','.kccck.','..ktk..','..kkk..']
+};
+function stamp(g,rows,X,Y,pal){
+  for(let y=0;y<rows.length;y++){ const r=rows[y];
+    for(let i=0;i<r.length;i++){ const ch=r[i]; if(ch==='.') continue; const c=pal[ch]||C[ch]; if(!c) continue; g.fillStyle=c; g.fillRect(X+i,Y+y,1,1); } }
+}
+function propPal(owner){ const P=PAL[owner||0]; return {m:P.m,d:P.d,l:P.l,S:'rgba(20,30,10,.28)',y:owner?C.y:P.l,
+  r:TC.rock,R:TC.rock2,a:TC.grass3,b:TC.tree,c:TC.tree2,t:TC.trunk}; }
 function drawProperty(g,cell,X,Y,at){
-  const P=PAL[cell.owner||0], t=cell.t;
+  const t=cell.t, pal=propPal(cell.owner);
   const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(X+a,Y+b,w,h); };
-  if(t==='port'){ R(0,0,T,T,TC.water); R(0,8,T,8,TC.road2); R(0,8,T,1,C.k); for(let i=1;i<T;i+=4) R(i,10,2,5,TC.road); R(9,1,2,8,C.k); R(4,1,10,2,P.m); R(4,3,2,4,C.k); R(5,5,1,2,P.l); return; }
-  R(0,0,T,T,TC.grass); R(0,13,T,3,TC.grass2);
-  if(t==='city'){ R(2,6,12,9,C.k); R(3,7,10,7,P.m); R(1,4,14,3,C.k); R(2,3,12,3,P.d); R(4,9,2,2,C.w); R(10,9,2,2,C.w); R(7,10,2,4,P.d); }
-  else if(t==='factory'){ R(1,5,14,10,C.k); R(2,6,12,8,P.m); R(2,6,12,2,P.d); R(11,1,3,5,C.k); R(12,2,1,4,P.d); R(4,9,8,5,C.k); R(5,10,6,1,P.l); R(5,12,6,1,P.l); }
-  else if(t==='airport'){ R(0,10,T,5,TC.road2); for(let i=1;i<T;i+=4) R(i,12,2,1,C.w); R(9,2,5,8,C.k); R(10,3,3,6,P.m); R(8,1,7,2,P.d); R(2,6,6,4,C.k); R(3,7,4,2,P.m); }
-  else if(t==='hq'){ R(3,3,10,12,C.k); R(4,4,8,10,P.m); R(4,4,8,2,P.d); R(7,8,2,6,C.k); R(5,7,2,2,C.w); R(9,7,2,2,C.w); R(7,0,1,4,C.k); R(8,0,4,2,cell.owner?C.y:P.l); }
+  if(t==='port'){ R(0,0,T,T,TC.water); R(0,7,T,9,TC.road2); R(0,7,T,1,C.k); for(let i=1;i<T;i+=4) R(i,9,2,6,TC.road); R(0,15,T,1,TC.plank2);
+    stamp(g,PROP.port,X,Y-4,pal); return; }
+  if(t==='airport'){ R(0,11,T,5,TC.road2); R(0,11,T,1,TC.sand2); for(let i=1;i<T;i+=5) R(i,13,3,1,C.w); stamp(g,PROP.airport,X,Y-4,pal); return; }
+  stamp(g,PROP[t],X,Y-4,pal);
 }
 function terrainLayer(map){
-  const c=mk(map.W*T,map.H*T), g=c.getContext('2d');
+  const c=mk(map.W*T,map.H*T+PAD), g=c.getContext('2d'); g.translate(0,PAD);
   for(let y=0;y<map.H;y++) for(let x=0;x<map.W;x++) drawTerrain(g,map,x,y);
   return c;
 }
@@ -434,7 +462,7 @@ function draw(g, s, ui, now){
   const map=s.map;
   if(!ui.terrain || ui.terrainKey!==ui.terrainVer){ ui.terrain=terrainLayer(map); ui.terrainKey=ui.terrainVer; }
   g.imageSmoothingEnabled=false;
-  g.drawImage(ui.terrain,0,0);
+  g.drawImage(ui.terrain,0,0); g.save(); g.translate(0,PAD);
   // 이동 · 공격 범위
   if(ui.moveSet){ g.fillStyle='rgba(120,190,255,.48)'; for(const k of ui.moveSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
   if(ui.atkSet){ g.fillStyle='rgba(240,70,50,.42)'; for(const k of ui.atkSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
@@ -457,6 +485,8 @@ function draw(g, s, ui, now){
     if(ui.hide===u.id) continue;
     const bob=(!u.done && u.owner===s.turn && !ui.anim && Math.floor(now/400)%2)?1:0;
     const spr=sprite(u.type,u.owner,u.done&&u.owner===s.turn);
+    const air=UNITS[u.type].cls==='air'||['fighter','bomber','bcopter','tcopter'].includes(u.type);
+    if(!u.dived){ g.fillStyle='rgba(15,20,10,.26)'; if(air) g.fillRect(Math.round(px)+4,Math.round(py)+14,8,2); else g.fillRect(Math.round(px)+2,Math.round(py)+13,12,2); }
     g.globalAlpha=u.dived?.55:1;
     g.drawImage(spr,Math.round(px),Math.round(py)-bob);
     g.globalAlpha=1;
@@ -479,7 +509,8 @@ function draw(g, s, ui, now){
     g.fillStyle=C.k; for(const [a,b] of [[-1-o,-1-o],[T-4+o,-1-o],[-1-o,T-4+o],[T-4+o,T-4+o]]){ g.fillRect(X+a,Y+b,5,5);} 
     g.fillStyle='#fff'; for(const [a,b,w,h] of [[-o,-o,4,1],[-o,-o,1,4],[T-4+o,-o,4,1],[T-1+o,-o,1,4],[-o,T-1+o,4,1],[-o,T-4+o,1,4],[T-4+o,T-1+o,4,1],[T-1+o,T-4+o,1,4]]) g.fillRect(X+a,Y+b,w,h);
   }
+  g.restore();
 }
-const Render={T,draw,sprite,terrainLayer,PAL};
+const Render={T,PAD,draw,sprite,terrainLayer,PAL};
 root.Render=Render;
 })(typeof self!=='undefined'?self:this);

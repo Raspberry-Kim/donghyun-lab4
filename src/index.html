@@ -28,18 +28,18 @@
     <div class="play-grid" id="play-grid">
       <div class="field-col">
         <div class="section-title"><h2><span>A</span> 전장</h2><span id="status" role="status">출전 준비</span></div>
-        <div class="board-wrap" id="board-wrap" tabindex="0" aria-label="동현전 전장. 방향키로 커서를 옮기고 Z로 고른다.">
+        <div class="board-wrap" id="board-wrap" tabindex="0" aria-label="동현전 전장. 방향키로 커서를 옮기고 X로 고른다.">
           <div class="board-top"><span id="day">출전 준비</span><span id="turn-badge"></span></div>
           <div class="board-stage"><canvas id="board" width="192" height="128" role="img" aria-label="동현전 지도와 유닛"></canvas>
             <div id="menu" class="game-menu" hidden role="menu"></div>
             <div id="banner" class="banner" hidden></div>
             <div id="result-card" class="result-card" hidden></div>
           </div>
-          <div class="board-bottom"><span id="tile-info">지도를 미리 보고 있다.</span><span id="hint">Z 확인 · X 취소 · Enter 메뉴</span></div>
+          <div class="board-bottom"><span id="tile-info">지도를 미리 보고 있다.</span><span id="hint">X 확인 · Z 취소 · Enter 메뉴</span></div>
         </div>
         <div class="touchpad" id="touchpad" aria-label="화면 조작 단추">
           <div class="dpad"><button data-key="ArrowUp" aria-label="위">▲</button><button data-key="ArrowLeft" aria-label="왼쪽">◀</button><button data-key="ArrowDown" aria-label="아래">▼</button><button data-key="ArrowRight" aria-label="오른쪽">▶</button></div>
-          <div class="pad-keys"><button data-key="z">Z<small>확인</small></button><button data-key="x">X<small>취소</small></button><button data-key="a">A<small>다음</small></button><button data-key="s">S<small>정보</small></button><button data-key="Enter">↵<small>메뉴</small></button></div>
+          <div class="pad-keys"><button data-key="x">X<small>확인</small></button><button data-key="z">Z<small>취소</small></button><button data-key="s">S<small>다음</small></button><button data-key="a">A<small>정보</small></button><button data-key="Enter">↵<small>메뉴</small></button></div>
         </div>
       </div>
       <div class="side-col">
@@ -59,7 +59,7 @@
           <div class="co-cards" id="co-cards"></div>
           <div class="info-card" id="info-card"></div>
           <div class="log-card"><div class="section-title"><h2><span>C</span> 전투 기록</h2><button id="concede" class="small-btn">항복하고 출전 준비로</button></div><ol id="log"></ol></div>
-          <div class="keys"><span><kbd>←↑↓→</kbd>커서</span><span><kbd>Z</kbd>확인</span><span><kbd>X</kbd>취소</span><span><kbd>A</kbd>다음 유닛</span><span><kbd>S</kbd>정보</span><span><kbd>Shift</kbd>사거리</span><span><kbd>Enter</kbd>메뉴·턴 종료</span></div>
+          <div class="keys"><span><kbd>←↑↓→</kbd>커서</span><span><kbd>X</kbd>확인</span><span><kbd>Z</kbd>취소</span><span><kbd>S</kbd>다음 유닛</span><span><kbd>A</kbd>정보</span><span><kbd>Shift</kbd>사거리</span><span><kbd>Enter</kbd>메뉴·턴 종료</span></div>
         </section>
       </div>
     </div>
@@ -89,10 +89,10 @@
     <div class="doc-heading"><div class="eyebrow">HOW TO PLAY</div><h2>먼저 상대 본부를 점령하거나, 상대 부대를 모두 무찌르면 이긴다.</h2><p>매일 아침 내 거점 하나마다 1000의 자금이 들어온다. 공장·공항·항구에서 유닛을 만들고, 보병류로 도시를 점령해 수입을 늘린다.</p></div>
     <div class="doc-columns"><div><h3>키보드</h3><table class="key-table"><tbody>
       <tr><td><kbd>←↑↓→</kbd></td><td>커서 이동, 메뉴 고르기, 공격 대상 바꾸기</td></tr>
-      <tr><td><kbd>Z</kbd></td><td>유닛 선택 · 이동 확정 · 명령 실행 · 생산</td></tr>
-      <tr><td><kbd>X</kbd></td><td>취소 · 한 단계 뒤로. 컴퓨터 차례에는 빨리 감기</td></tr>
-      <tr><td><kbd>A</kbd></td><td>아직 움직이지 않은 다음 유닛으로</td></tr>
-      <tr><td><kbd>S</kbd></td><td>커서 아래 유닛·지형 정보</td></tr>
+      <tr><td><kbd>X</kbd></td><td>유닛 선택 · 이동 확정 · 명령 실행 · 생산</td></tr>
+      <tr><td><kbd>Z</kbd></td><td>취소 · 한 단계 뒤로. 컴퓨터 차례에는 빨리 감기</td></tr>
+      <tr><td><kbd>S</kbd></td><td>아직 움직이지 않은 다음 유닛으로</td></tr>
+      <tr><td><kbd>A</kbd></td><td>커서 아래 유닛·지형 정보</td></tr>
       <tr><td><kbd>Shift</kbd></td><td>누르고 있는 동안 커서 아래 유닛의 공격 범위</td></tr>
       <tr><td><kbd>Enter</kbd></td><td>메뉴: 지휘관 능력 · 턴 종료 · 항복</td></tr>
     </tbody></table></div>

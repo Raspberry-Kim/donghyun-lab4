@@ -98,7 +98,7 @@ function status(t,kind){ const s=$('#status'); s.textContent=t; s.dataset.kind=k
 let S=null, mode='setup', ui={cursor:null,fx:[],terrainVer:0}, sel=null, orig=null, reachR=null, menu=null, tgt=null, spots=null, busy=false, fast=false, committed=false, info=null;
 let previewS=null;
 function preview(c){ previewS=E.newGame({map:c.map,co1:c.co1,co2:c.co2,first:1,funds:0,seed:1}); previewS.units=[]; ui={cursor:null,fx:[],terrainVer:(ui.terrainVer||0)+1}; size(previewS); $('#day').textContent=MAPNAME(c.map); $('#turn-badge').textContent=''; $('#turn-badge').className=''; $('#tile-info').textContent=MAPS.find(m=>m.id===c.map).note; }
-function size(s){ canvas.width=s.map.W*R.T; canvas.height=s.map.H*R.T; fit(); }
+function size(s){ canvas.width=s.map.W*R.T; canvas.height=s.map.H*R.T+R.PAD; fit(); }
 function fit(){
   const st=canvas.parentElement, w=st.clientWidth; if(!w||!canvas.width) return;
   // 화면 높이에 맞춰 너무 커지지 않게 한다(가로 기준 비율 유지)
@@ -128,7 +128,7 @@ function findHQ(p){ for(let y=0;y<S.map.H;y++) for(let x=0;x<S.map.W;x++){ const
 function backToSetup(){
   S=null; mode='setup'; closeMenu(); $('#result-card').hidden=true; $('#banner').hidden=true;
   $('#setup-panel').hidden=false; $('#hud').hidden=true; $('#board-wrap').classList.remove('live'); $('#touchpad').classList.remove('on');
-  preview(cfg); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').textContent='Z 확인 · X 취소 · Enter 메뉴';
+  preview(cfg); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
 }
 $('#concede').onclick=()=>{ if(!S||S.winner||mode==='cpu') return; confirmMenu('항복하고 출전 준비로 돌아갈까?',[['항복한다',()=>{E.concede(S,1);finishCheck();}],['계속 싸운다',()=>{}]]); };
 async function banner(text,sub,cls,ms=950){
@@ -136,7 +136,7 @@ async function banner(text,sub,cls,ms=950){
   await sleep(reduced||fast?Math.min(ms,350):ms); b.hidden=true;
 }
 async function beginTurn(){
-  busy=true; processEvents(); $('#hint').textContent='Z 확인 · X 취소 · Enter 메뉴';
+  busy=true; processEvents(); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
   const p=S.turn; if(p===2) mode='cpu'; hud();
   await banner(`${S.day}일째 · ${p===1?'나의 차례':'컴퓨터 차례'}`,`${coName(S.players[p].co)} · 자금 ${won(S.players[p].funds)}`,'p'+p);
   busy=false;
@@ -150,7 +150,7 @@ function finishCheck(){
   const card=$('#result-card');
   card.innerHTML=`<div><h3>${win?'승리':'패배'}</h3><p>${S.day}일째 · ${esc(S.reason)}${win?' · 붉은 진영이 이겼다.':' · 푸른 진영이 이겼다.'}</p>
   <dl><dt></dt><dt>나</dt><dt>컴퓨터</dt><dt>만든 유닛</dt><dd>${P[1].built}</dd><dd>${P[2].built}</dd><dt>무찌른 유닛</dt><dd>${P[1].kills}</dd><dd>${P[2].kills}</dd><dt>잃은 유닛</dt><dd>${P[1].lost}</dd><dd>${P[2].lost}</dd><dt>거점</dt><dd>${E.propsOf(S,1)}</dd><dd>${E.propsOf(S,2)}</dd></dl>
-  <button id="again">출전 준비로 <kbd>Z</kbd></button></div>`;
+  <button id="again">출전 준비로 <kbd>X</kbd></button></div>`;
   card.hidden=false; $('#again').onclick=backToSetup;
   status(win?'승리':'패배'); log(`${win?'승리':'패배'} · ${S.reason}`,0);
   return true;
@@ -205,8 +205,8 @@ function infoCard(){
   if(td.prop) h+=`<div class="row"><span>점령값 <b>${t.capId?t.cp:20}</b>/20</span><span>${t.t==='hq'?'점령하면 승리':t.t==='city'?'수입 1000 · 회복':'수입 1000 · 생산'}</span></div>`;
   if(u){ const d=UNITS[u.type], r=E.rangeOf(S,u);
     h+=`<h3 style="margin-top:8px">${d.name} · ${side(u.owner)}<small>체력 ${Math.ceil(u.hp/10)}/10</small></h3><div class="row"><span>이동 <b>${E.moveOf(S,u)}</b></span><span>연료 <b>${u.fuel}</b>/${d.fuel}</span><span>탄약 <b>${d.ammo?u.ammo+'/'+d.ammo:'—'}</b></span><span>사거리 <b>${r?(r[0]===r[1]?r[0]:r.join('~')):'—'}</b></span>${u.cargo.length?`<span>탑재 <b>${u.cargo.map(c=>UN(c.type)).join(', ')}</b></span>`:''}${u.dived?'<span><b>잠항 중</b></span>':''}</div>`;
-    if(u.owner===1&&S.turn===1&&mode==='idle') h+=`<p>${u.done?'이번 차례에 행동을 마쳤다.':'Z로 고르면 이동 범위가 보인다.'}</p>`;
-  } else if(mode==='idle'&&S.turn===1){ const b=E.canBuildAt(S,1,x,y); h+=`<p>${b.length?'Z로 생산 메뉴를 연다.':'Enter로 메뉴(지휘관 능력 · 턴 종료)를 연다.'}</p>`; }
+    if(u.owner===1&&S.turn===1&&mode==='idle') h+=`<p>${u.done?'이번 차례에 행동을 마쳤다.':'X로 고르면 이동 범위가 보인다.'}</p>`;
+  } else if(mode==='idle'&&S.turn===1){ const b=E.canBuildAt(S,1,x,y); h+=`<p>${b.length?'X로 생산 메뉴를 연다.':'Enter로 메뉴(지휘관 능력 · 턴 종료)를 연다.'}</p>`; }
   box.innerHTML=h;
   $('#tile-info').textContent=`${td.name} ★${td.def}${u?` · ${UNITS[u.type].name} ${Math.ceil(u.hp/10)}`:''}`;
 }
@@ -368,13 +368,13 @@ async function runCPU(){
 }
 
 /* ---------- 키보드 ---------- */
-const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',KeyZ:'z',KeyX:'x',KeyA:'a',KeyS:'s',Enter:'enter',NumpadEnter:'enter',Space:'z'};
+const KEYMAP={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',KeyX:'z',KeyZ:'x',KeyS:'a',KeyA:'s',Enter:'enter',NumpadEnter:'enter',Space:'z'};
 document.addEventListener('keydown',e=>{
   if(!S||tab!=='play') return;
   const el=document.activeElement; if(el&&(el.tagName==='TEXTAREA'||el.tagName==='SELECT'||el.tagName==='INPUT')) return;
   if(e.metaKey||e.ctrlKey||e.altKey) return;
   if(e.key==='Shift'){ if(mode==='idle'){ const u=E.unitAt(S,...ui.cursor); if(u){ ui.atkSet=rangeTiles(u); } } return; }
-  const k=KEYMAP[e.code]||({z:'z',x:'x',a:'a',s:'s',Z:'z',X:'x',A:'a',S:'s'})[e.key]||(e.key==='Enter'?'enter':null)||({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'})[e.key];
+  const k=KEYMAP[e.code]||({x:'z',z:'x',s:'a',a:'s',X:'z',Z:'x',S:'a',A:'s'})[e.key]||(e.key==='Enter'?'enter':null)||({ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'})[e.key];
   if(!k) return;
   e.preventDefault(); key(k);
 });
@@ -423,11 +423,11 @@ function key(k){
   }
 }
 document.querySelectorAll('#touchpad [data-key]').forEach(b=>{
-  b.addEventListener('pointerdown',e=>{e.preventDefault();const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',z:'z',x:'x',a:'a',s:'s',Enter:'enter'}[b.dataset.key];key(m);});
+  b.addEventListener('pointerdown',e=>{e.preventDefault();const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',x:'z',z:'x',s:'a',a:'s',Enter:'enter'}[b.dataset.key];key(m);});
 });
 canvas.addEventListener('click',e=>{
   if(!S||mode==='cpu'||busy||menu) return;
-  const r=canvas.getBoundingClientRect(), x=Math.floor((e.clientX-r.left)/r.width*S.map.W), y=Math.floor((e.clientY-r.top)/r.height*S.map.H);
+  const r=canvas.getBoundingClientRect(), x=Math.floor((e.clientX-r.left)/r.width*S.map.W), y=Math.floor(((e.clientY-r.top)/r.height*canvas.height-R.PAD)/R.T);
   if(x<0||y<0||x>=S.map.W||y>=S.map.H) return;
   if(mode==='target'){ const i=tgt.list.findIndex(t=>t.x===x&&t.y===y); if(i<0) return; if(i===tgt.i) return key('z'); tgt.i=i; ui.cursor=[x,y]; return hud(); }
   if(ui.cursor[0]===x&&ui.cursor[1]===y) return key('z');
