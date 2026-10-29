@@ -127,7 +127,7 @@ const STAR_VALUE = 9000;
    c 중립 도시  m 중립 공장  a 중립 공항  p 중립 항구
    C/D 도시(나/CPU)  M/N 공장  A/E 공항  P/R 항구  H/I 본부 */
 const MAP_SRC = [
-  {id:1, name:'작은 연습장', note:'12×8 · 공장 3 · 빠른 한 판', half:[
+  {id:1, name:'첫번째 교전', note:'12×8 · 공장 3 · 빠른 한 판', half:[
     '^..c...==DI.',
     'f..m...=.N.f',
     '.c..f..=..c.',

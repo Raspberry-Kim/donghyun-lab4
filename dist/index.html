@@ -326,7 +326,7 @@ footer a{color:var(--muted)}
   <section id="tab-protocol" class="tab-panel document" hidden>
     <div class="doc-heading"><div class="eyebrow">SORTIE I/O · v0.1</div><h2>출전은 동현랭으로, 전투는 키보드로.</h2><p>동현랭 프로그램이 출력한 정수를 차례로 읽는다. 명령 번호 하나 뒤에 값 하나가 온다. 마지막에 <code>6</code>을 출력해야 전장에 나간다. 전투가 시작된 뒤에는 동현랭을 쓰지 않는다.</p></div>
     <div class="table-wrap"><table><thead><tr><th>명령</th><th>하는 일</th><th>값</th><th>기본값</th></tr></thead><tbody>
-      <tr><td>1</td><td>지도</td><td>1 작은 연습장 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑 · 5 쌍둥이 다리 · 6 숲속 오솔길 · 7 모래톱 해안 · 8 세 갈래 길 · 9 호수 마을 · 10 바위 고개 · 11 두 섬 다리 · 12 강 삼각주 · 13 하늘 기지 · 14 십자 도로 · 15 바다 요새 · 16 들꽃 평원 · 17 겹겹 산성 · 18 쌍둥이 섬 · 19 긴 해안선 · 20 최후의 전선</td><td>1</td></tr>
+      <tr><td>1</td><td>지도</td><td>1 첫번째 교전 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑 · 5 쌍둥이 다리 · 6 숲속 오솔길 · 7 모래톱 해안 · 8 세 갈래 길 · 9 호수 마을 · 10 바위 고개 · 11 두 섬 다리 · 12 강 삼각주 · 13 하늘 기지 · 14 십자 도로 · 15 바다 요새 · 16 들꽃 평원 · 17 겹겹 산성 · 18 쌍둥이 섬 · 19 긴 해안선 · 20 최후의 전선</td><td>1</td></tr>
       <tr><td>2</td><td>나의 지휘관</td><td>1 뭉치 · 2 뚱띠 · 3 또치 · 4 포동이 · 5 뿡뿡</td><td>1</td></tr>
       <tr><td>3</td><td>CPU 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
       <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 CPU가 먼저</td><td>1</td></tr>
@@ -730,7 +730,7 @@ const STAR_VALUE = 9000;
    c 중립 도시  m 중립 공장  a 중립 공항  p 중립 항구
    C/D 도시(나/CPU)  M/N 공장  A/E 공항  P/R 항구  H/I 본부 */
 const MAP_SRC = [
-  {id:1, name:'작은 연습장', note:'12×8 · 공장 3 · 빠른 한 판', half:[
+  {id:1, name:'첫번째 교전', note:'12×8 · 공장 3 · 빠른 한 판', half:[
     '^..c...==DI.',
     'f..m...=.N.f',
     '.c..f..=..c.',
@@ -1980,7 +1980,7 @@ const wrap=a=>['나는 동현이냐?',...a,'동현이구나'].join('\n');
 const sortie=block('출전',6);
 const examples=[
  {id:'practice',title:'01 · 첫번째 교전',note:'12×8의 작은 지도에서 한 판을 빠르게 익힌다. 내가 먼저 움직인다. 지휘관·선공·자금 추천값은 코드에 있다.',
-  code:wrap([block('지도 1 · 작은 연습장',1,1),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 1 · 뭉치',3,1),block('선공 1 · 내가 먼저',4,1),sortie])},
+  code:wrap([block('지도 1 · 첫번째 교전',1,1),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 1 · 뭉치',3,1),block('선공 1 · 내가 먼저',4,1),sortie])},
  {id:'field',title:'02 · 첫 들판',note:'강과 다리가 있는 지상전. 다리를 먼저 차지해 보자. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 2 · 첫 들판',1,2),block('나의 지휘관 2 · 뚱띠',2,2),block('CPU 지휘관 4 · 포동이',3,4),sortie])},
  {id:'strait',title:'03 · 푸른 해협',note:'바다·공항·항구가 모두 있는 지도. 시작 자금 5000으로 보병을 서둘러 내보내 거점을 넓힌다. 지휘관·선공·자금 추천값은 코드에 있다.',
