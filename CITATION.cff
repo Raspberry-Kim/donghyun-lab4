@@ -4,6 +4,7 @@ title: "Donghyunjeon (동현전): a single-player turn-based strategy simulation
 type: software
 version: "0.2"
 date-released: "2026-10-29"
+doi: "10.5281/zenodo.23768831"
 authors:
   - family-names: Kim
     given-names: Dong Hyun

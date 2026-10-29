@@ -1,5 +1,7 @@
 # 동현전 v0.2
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23768831.svg)](https://doi.org/10.5281/zenodo.23768831)
+
 동현랭으로 참전하는 턴제 전략 시뮬레이션 게임이다.
 동현 시리즈의 다섯 번째 작은 실험이다.
 
