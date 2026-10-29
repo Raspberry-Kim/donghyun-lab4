@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="동현랭으로 출전 명령을 내리고 방향키로 부대를 지휘하는 1인용 턴제 전술 게임. 동현랭 외전 동현전.">
+  <title>동현전™ · 동현랭으로 출전하는 작은 전술 게임</title>
+  <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="./favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header class="header">
+  <a class="brand" href="#" aria-label="동현전 첫 화면으로"><span class="brand-main"><img class="brand-icon" src="__BRAND_ICON__" alt="" width="96" height="96">동현<span>전</span><sup>TM</sup></span><i class="brand-divider"></i><span class="brand-sub">TACTICS SIDE STORY<small>동현랭 외전 · 작은 전술 놀이마당</small></span></a>
+  <div class="edition"><span>외전</span>v0.1<button id="theme" class="icon-btn" aria-label="밝은 화면과 어두운 화면 전환" title="화면 전환" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button></div>
+</header>
+<main>
+<!-- SERIES-NAV-START -->
+<nav class="series-strip" aria-label="동현 프로젝트 이동"><p class="series-context"><strong>동현의 작은 실험들</strong>하나의 언어, 세 개의 작은 세계 그리고 외전 하나</p><div class="series-links"><a class="series-item" data-series="lang" href="https://raspberry-kim.github.io/donghyun-lang/" aria-label="동현랭™ 언어 플레이그라운드로 이동"><span class="series-name">동현랭<sup>™</sup></span><span class="series-note">언어</span></a><a class="series-item" data-series="fly" href="https://raspberry-kim.github.io/donghyun-lab1/" aria-label="동현초™ 초파리 회로실험실로 이동"><span class="series-name">동현초<sup>™</sup></span><span class="series-note">초파리</span></a><a class="series-item" data-series="worm" href="https://raspberry-kim.github.io/donghyun-lab2/" aria-label="동현파™ 선충 회로실험실로 이동"><span class="series-name">동현파<sup>™</sup></span><span class="series-note">선충</span></a><a class="series-item" data-series="village" href="https://raspberry-kim.github.io/donghyun-lab3/" aria-label="동현빌™ 마을 유행 실험실로 이동"><span class="series-name">동현빌<sup>™</sup></span><span class="series-note">마을</span></a></div><span class="series-side" aria-current="page"><b>외전</b>동현전<small>지금 여기</small></span></nav>
+<!-- SERIES-NAV-END -->
+  <section class="intro">
+    <div><div class="eyebrow">ESOTERIC LANGUAGE × TURN-BASED TACTICS</div><h1>동현랭 외전: <span class="title-brand">동현<span>전</span><sup>TM</sup></span></h1><p><strong>동현랭</strong>으로 출전 명령을 내리고, 방향키로 붉은 진영을 지휘해 컴퓨터의 푸른 진영과 겨룬다.</p></div>
+    <div class="model-stamp"><strong>1 <span>대</span> CPU</strong><strong>19 <span>병종</span></strong><small>난이도 보통 · 안개 없음 · 지도 4종</small></div>
+  </section>
+  <nav class="tabs" aria-label="동현전 메뉴"><button class="active" data-tab="play" aria-current="page">전장</button><button data-tab="protocol">동현랭 출전 규약</button><button data-tab="rules">규칙과 지휘관</button><button data-tab="about">만든 것과 출처</button><span>시작은 동현랭으로, 지휘는 키보드로</span></nav>
+
+  <section id="tab-play" class="tab-panel">
+    <div class="play-grid" id="play-grid">
+      <div class="field-col">
+        <div class="section-title"><h2><span>A</span> 전장</h2><span id="status" role="status">출전 준비</span></div>
+        <div class="board-wrap" id="board-wrap" tabindex="0" aria-label="동현전 전장. 방향키로 커서를 옮기고 Z로 고른다.">
+          <div class="board-top"><span id="day">출전 준비</span><span id="turn-badge"></span></div>
+          <div class="board-stage"><canvas id="board" width="192" height="128" role="img" aria-label="동현전 지도와 유닛"></canvas>
+            <div id="menu" class="game-menu" hidden role="menu"></div>
+            <div id="banner" class="banner" hidden></div>
+            <div id="result-card" class="result-card" hidden></div>
+          </div>
+          <div class="board-bottom"><span id="tile-info">지도를 미리 보고 있다.</span><span id="hint">Z 확인 · X 취소 · Enter 메뉴</span></div>
+        </div>
+        <div class="touchpad" id="touchpad" aria-label="화면 조작 단추">
+          <div class="dpad"><button data-key="ArrowUp" aria-label="위">▲</button><button data-key="ArrowLeft" aria-label="왼쪽">◀</button><button data-key="ArrowDown" aria-label="아래">▼</button><button data-key="ArrowRight" aria-label="오른쪽">▶</button></div>
+          <div class="pad-keys"><button data-key="z">Z<small>확인</small></button><button data-key="x">X<small>취소</small></button><button data-key="a">A<small>다음</small></button><button data-key="s">S<small>정보</small></button><button data-key="Enter">↵<small>메뉴</small></button></div>
+        </div>
+      </div>
+      <div class="side-col">
+        <section class="setup-panel" id="setup-panel">
+          <div class="section-title"><h2><span>B</span> 동현랭 출전 코드</h2><span>sortie.dh</span></div>
+          <div class="dh-panel">
+            <div class="dh-head"><select id="example" aria-label="동현랭 출전 예제 선택"></select><span class="dh-spacer"></span><button id="run" class="dh-btn dh-run" title="Ctrl/⌘ + Enter"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"></path></svg>출전 <kbd>⌘↵</kbd></button></div>
+            <div class="code-wrap"><div id="lines" aria-hidden="true"></div><textarea id="code" aria-label="동현랭 출전 코드" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea></div>
+            <div class="code-meta dh-status"><span id="line-count"></span><span>정수 출력 → 출전 명령 · ⌘/Ctrl ↵ 실행</span></div>
+          </div>
+          <p id="example-note"></p>
+          <div class="sortie-card" id="sortie-card"></div>
+          <p id="result" aria-live="polite">예제를 고른 뒤 출전을 눌러 보자. 지도·지휘관·선공·자금은 코드로만 정한다.</p>
+          <div class="file-row"><button id="save">.dh 저장</button><label class="file-label">.dh 열기<input id="open" type="file" accept=".dh,.txt,text/plain" hidden></label></div>
+        </section>
+        <section class="hud" id="hud" hidden>
+          <div class="co-cards" id="co-cards"></div>
+          <div class="info-card" id="info-card"></div>
+          <div class="log-card"><div class="section-title"><h2><span>C</span> 전투 기록</h2><button id="concede" class="small-btn">항복하고 출전 준비로</button></div><ol id="log"></ol></div>
+          <div class="keys"><span><kbd>←↑↓→</kbd>커서</span><span><kbd>Z</kbd>확인</span><span><kbd>X</kbd>취소</span><span><kbd>A</kbd>다음 유닛</span><span><kbd>S</kbd>정보</span><span><kbd>Shift</kbd>사거리</span><span><kbd>Enter</kbd>메뉴·턴 종료</span></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-protocol" class="tab-panel document" hidden>
+    <div class="doc-heading"><div class="eyebrow">SORTIE I/O · v0.1</div><h2>출전은 동현랭으로, 전투는 키보드로.</h2><p>동현랭 프로그램이 출력한 정수를 차례로 읽는다. 명령 번호 하나 뒤에 값 하나가 온다. 마지막에 <code>6</code>을 출력해야 전장에 나간다. 전투가 시작된 뒤에는 동현랭을 쓰지 않는다.</p></div>
+    <div class="table-wrap"><table><thead><tr><th>명령</th><th>하는 일</th><th>값</th><th>기본값</th></tr></thead><tbody>
+      <tr><td>1</td><td>지도</td><td>1 작은 연습장 · 2 첫 들판 · 3 푸른 해협 · 4 산맥 회랑</td><td>1</td></tr>
+      <tr><td>2</td><td>나의 지휘관</td><td>1 한결 · 2 무쇠 · 3 새벽 · 4 다행 · 5 곳간</td><td>1</td></tr>
+      <tr><td>3</td><td>컴퓨터 지휘관</td><td>1~5 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
+      <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 컴퓨터가 먼저</td><td>1</td></tr>
+      <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액</td><td>0</td></tr>
+      <tr><td>7</td><td>난수 시드</td><td>1~2147483646 · 같은 시드는 같은 운</td><td>매번 새로</td></tr>
+      <tr><td>6</td><td>출전</td><td>값 없음 · 반드시 마지막에</td><td>—</td></tr>
+    </tbody></table></div>
+    <div class="doc-columns"><div><h3>고정된 조건</h3><p>컴퓨터 난이도는 보통, 전장의 안개는 없다. 사람 한 명과 컴퓨터 한 명만 겨룬다. 여러 사람이 번갈아 하는 대전, 네트워크 대전, 이야기 진행 모드는 없다.</p><p>같은 명령을 여러 번 출력하면 마지막 값이 쓰인다. 범위를 벗어난 값, 짝이 없는 명령, 6 뒤의 출력은 오류로 알려 주고 전장에 나가지 않는다.</p></div>
+    <div><h3>예시</h3><pre class="code-example">나는 동현이냐?
+  ㅋㅋ 지도 2 · 첫 들판
+  뿡뿡 도옹~뿡뿡뿡~뿡뿡 도오옹~뿡뿡뿡
+  ㅋㅋ 출전
+  뿡뿡 도오오오오오옹~뿡뿡뿡
+동현이구나</pre><p>동현랭 문법은 <a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭 플레이그라운드</a>에서 배울 수 있다.</p></div></div>
+  </section>
+
+  <section id="tab-rules" class="tab-panel document" hidden>
+    <div class="doc-heading"><div class="eyebrow">HOW TO PLAY</div><h2>먼저 상대 본부를 점령하거나, 상대 부대를 모두 무찌르면 이긴다.</h2><p>매일 아침 내 거점 하나마다 1000의 자금이 들어온다. 공장·공항·항구에서 유닛을 만들고, 보병류로 도시를 점령해 수입을 늘린다.</p></div>
+    <div class="doc-columns"><div><h3>키보드</h3><table class="key-table"><tbody>
+      <tr><td><kbd>←↑↓→</kbd></td><td>커서 이동, 메뉴 고르기, 공격 대상 바꾸기</td></tr>
+      <tr><td><kbd>Z</kbd></td><td>유닛 선택 · 이동 확정 · 명령 실행 · 생산</td></tr>
+      <tr><td><kbd>X</kbd></td><td>취소 · 한 단계 뒤로. 컴퓨터 차례에는 빨리 감기</td></tr>
+      <tr><td><kbd>A</kbd></td><td>아직 움직이지 않은 다음 유닛으로</td></tr>
+      <tr><td><kbd>S</kbd></td><td>커서 아래 유닛·지형 정보</td></tr>
+      <tr><td><kbd>Shift</kbd></td><td>누르고 있는 동안 커서 아래 유닛의 공격 범위</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>메뉴: 지휘관 능력 · 턴 종료 · 항복</td></tr>
+    </tbody></table></div>
+    <div><h3>규칙 요약</h3><ul>
+      <li>점령: 거점의 점령값은 20. 보병류가 한 번에 자기 표시 체력만큼 줄인다. 다른 칸으로 옮기면 처음부터 다시.</li>
+      <li>지형 방어: 평지 1 · 숲 2 · 산 4 · 도시·공장·공항·항구 3 · 본부 4 · 도로·다리·바다 0. 항공 유닛은 지형 방어를 받지 않는다.</li>
+      <li>피해: 공격 유닛의 체력이 낮을수록, 방어 칸의 별이 많을수록 줄어든다. 살아남은 근접 유닛은 반격한다. 간접 공격 유닛은 움직인 날 공격하지 못하고 반격도 받지 않는다.</li>
+      <li>보급: 아군 거점에서 시작하면 체력 +2(비용 10%/칸)와 연료·탄약 보충. 보급차는 이웃 아군을 매일 보급한다.</li>
+      <li>연료: 항공기와 함정은 매일 연료를 쓰고, 0이 되면 사라진다. 잠수한 잠수함은 더 많이 쓴다.</li>
+      <li>지휘관 능력: 싸우며 별이 차오른다. 작은 능력과 큰 능력 중 하나를 그날 하루 쓴다. 능력 중에는 공격·방어 +10%.</li>
+    </ul></div></div>
+    <h3>붉은별 사령부 지휘관</h3>
+    <div class="co-grid" id="co-grid"></div>
+    <h3>병종표</h3>
+    <div class="table-wrap"><table id="unit-table"></table></div>
+  </section>
+
+  <section id="tab-about" class="tab-panel document" hidden>
+    <div class="doc-heading"><div class="eyebrow">WHAT IS NEW, WHAT IS BORROWED</div><h2>규칙의 뼈대는 고전 전술 게임에서, 나머지는 새로 만들었다.</h2><p>동현전은 격자 위 턴제 전술 게임의 오래된 규칙 틀(점령·생산·연료·탄약·지형 방어·지휘관 능력)을 따른다. 그림, 지도, 지휘관 이름·성격·대사, 피해표 수치, 컴퓨터 판단은 동현전에서 새로 정했다.</p></div>
+    <div class="science-block"><span class="index">01</span><div><h3>원작의 그림·이름·지도·음악은 담지 않았다.</h3><p>닌텐도의 원작 그래픽·캐릭터·지도·음악은 쓰지 않는다. 지휘관은 원작 붉은별(레드 스타) 진영 지휘관 구성에서 흔한 원형(균형·근접·보병·행운·절약)만 참고해 새 인물로 만들었다. 이 게임은 닌텐도·인텔리전트 시스템즈와 관계가 없다.</p></div></div>
+    <div class="science-block"><span class="index">02</span><div><h3>병종의 가격·이동·연료·탄약은 공개 해설을 참고했다.</h3><p>병종의 기본 수치와 지형 방어, 점령값 20, 거점 수입 1000, 거점 회복 +2는 공개 해설 문서(나무위키 「패미컴 워즈」 공통 유닛·지형 항목)를 참고했다. 피해표의 칸별 값은 동현전에서 따로 조정했다.</p></div></div>
+    <div class="science-block"><span class="index">03</span><div><h3>코드와 글꼴의 이용 조건</h3><p>동현전 코드는 MIT, 글꼴(검은고딕 Black Han Sans · Pretendard · 나눔고딕코딩)은 SIL Open Font License를 따른다. 동현랭 실행기는 동현랭 저장소의 MIT 코드를 그대로 쓴다.</p></div></div>
+    <aside class="maker-note"><span class="eyebrow">만든 사람</span><p>인하대학교 의과대학 김동현 교수는 백신학·감염학을 공부하고 가르친다. 동현전은 동현랭 시리즈의 다섯 번째 작은 프로젝트이자, 동현초·동현파·동현빌보다 가벼운 외전 놀이마당이다.</p></aside>
+  </section>
+</main>
+<footer><span>동현전 v0.1 · 인하대학교 의과대학 교수 김동현</span><span>1인용 대 컴퓨터 · 난이도 보통 · 안개 없음</span><span><a href="https://raspberry-kim.github.io/donghyun-lang/" target="_blank" rel="noopener">동현랭</a> · <a href="https://github.com/Raspberry-Kim/donghyun-lang" target="_blank" rel="noopener">동현랭 GitHub</a></span></footer>
+<script src="./game.js"></script>
+</body></html>
