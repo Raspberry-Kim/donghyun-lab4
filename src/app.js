@@ -128,7 +128,7 @@ function findHQ(p){ for(let y=0;y<S.map.H;y++) for(let x=0;x<S.map.W;x++){ const
 function backToSetup(){
   S=null; mode='setup'; closeMenu(); $('#result-card').hidden=true; $('#banner').hidden=true;
   $('#setup-panel').hidden=false; $('#hud').hidden=true; $('#board-wrap').classList.remove('live'); $('#touchpad').classList.remove('on');
-  preview(cfg); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
+  preview(cfg); renderSlotList(); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
 }
 $('#concede').onclick=()=>{ if(!S||S.winner||mode==='cpu') return; confirmMenu('항복하고 출전 준비로 돌아갈까?',[['항복한다',()=>{E.concede(S,1);finishCheck();}],['계속 싸운다',()=>{}]]); };
 async function banner(text,sub,cls,ms=950){
@@ -234,8 +234,81 @@ function mainMenu(){
     items.push({label:co.scop.name,note:'★'.repeat(co.scop.stars),off:P.meter<co.scop.stars*STAR_VALUE,fn:()=>usePower(2)});
   }
   items.push({label:'턴 종료',fn:endTurnAsk});
+  items.push({label:'저장',fn:saveMenu});
+  items.push({label:'불러오기',fn:loadMenu});
   items.push({label:'항복',fn:()=>$('#concede').click()});
   mode='menu'; openMenu(`${S.day}일째 · ${co.name}`,items,()=>{mode='idle';});
+}
+
+/* ---------- 저장 · 불러오기 ----------
+   판 전체(지도 점령 상태·유닛·자금·별·날짜·차례·난수 상태)를 JSON으로 옮긴다.
+   수송 유닛의 cargo는 유닛 객체를 직접 가리키므로 id로 바꿔 저장하고, 불러올 때 다시 잇는다. */
+const SAVE_FORMAT='donghyun-jeon-save', SAVE_VERSION=1, SLOT_KEY=n=>'donghyun-jeon:slot'+n, SLOTS=3;
+function snapshot(){
+  const state=JSON.parse(JSON.stringify(S,(k,v)=>k==='cargo'?v.map(c=>c.id):(k==='events'?[]:v)));
+  const logs=[...$('#log').children].reverse().map(li=>({c:li.className,h:li.innerHTML}));
+  return {format:SAVE_FORMAT,version:SAVE_VERSION,savedAt:new Date().toISOString(),
+    summary:{map:S.map.id,mapName:MAPNAME(S.map.id),day:S.day,co1:coName(S.players[1].co),co2:coName(S.players[2].co)},state,logs};
+}
+function restore(data){
+  if(!data||data.format!==SAVE_FORMAT) throw new Error('동현전 저장 파일이 아니다.');
+  if(data.version!==SAVE_VERSION) throw new Error('지원하지 않는 저장 형식 버전이다('+data.version+').');
+  const st=data.state, m=MAPS.find(m=>m.id===st?.map?.id);
+  if(!m||st.map.W!==m.W||st.map.H!==m.H||!Array.isArray(st.map.grid)||st.map.grid.length!==m.H) throw new Error('지도 정보가 맞지 않는다.');
+  if(!Array.isArray(st.units)||st.units.some(u=>!UNITS[u.type])) throw new Error('유닛 정보가 맞지 않는다.');
+  if(!st.players||!st.players[1]||!st.players[2]||!COS[st.players[1].co-1]||!COS[st.players[2].co-1]) throw new Error('지휘관 정보가 맞지 않는다.');
+  if(st.winner) throw new Error('이미 끝난 판이다.');
+  const byId=new Map(st.units.map(u=>[u.id,u]));
+  for(const u of st.units){ u.cargo=(u.cargo||[]).map(id=>byId.get(id)).filter(Boolean); }
+  st.events=[];
+  closeMenu(); $('#result-card').hidden=true; $('#banner').hidden=true; clearSel();
+  S=st; ui={cursor:null,fx:[],terrainVer:(ui.terrainVer||0)+1}; size(S);
+  const hq=findHQ(1); ui.cursor=[hq[0],hq[1]];
+  $('#setup-panel').hidden=true; $('#hud').hidden=false; $('#board-wrap').classList.add('live'); $('#touchpad').classList.add('on');
+  const l=$('#log'); l.innerHTML=''; for(const e of (data.logs||[]).slice(-79)){ const li=document.createElement('li'); li.className=String(e.c||'').replace(/[^a-z0-9 ]/gi,''); li.innerHTML=String(e.h||''); l.prepend(li); }
+  log(`${S.day}일째 판을 불러왔다.`,0);
+  fit(); $('#board-wrap').focus({preventScroll:true});
+  busy=false; fast=false; mode='idle'; $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴'; hud();
+  if(S.turn===2) runCPU();
+}
+function readSlot(n){ try{ const t=localStorage.getItem(SLOT_KEY(n)); return t?JSON.parse(t):null; }catch(e){ return null; } }
+function slotNote(d){ if(!d) return '비어 있음'; const t=new Date(d.savedAt); const pad=v=>String(v).padStart(2,'0');
+  return `${d.summary.mapName} · ${d.summary.day}일째 · ${t.getMonth()+1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())}`; }
+function toast(t){ log(t,0); status(t); }
+function saveToSlot(n){
+  try{ localStorage.setItem(SLOT_KEY(n),JSON.stringify(snapshot())); toast(`브라우저 칸 ${n}에 저장했다.`); }
+  catch(e){ toast('브라우저 저장에 실패했다. 파일로 내려받아 저장하자.'); }
+}
+function saveToFile(){
+  const d=snapshot(), a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'}));
+  a.download=`donghyun-jeon-map${d.summary.map}-day${d.summary.day}.dhsave`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast('저장 파일을 내려받았다.');
+}
+function saveMenu(){
+  const items=[];
+  for(let n=1;n<=SLOTS;n++){ const d=readSlot(n);
+    items.push({label:`브라우저 칸 ${n}`,note:slotNote(d),fn:()=>{ if(d) confirmMenu(`칸 ${n}에 덮어쓸까?`,[['덮어쓴다',()=>saveToSlot(n)],['그만둔다',()=>{}]]); else { closeMenu(); mode='idle'; saveToSlot(n); hud(); } }}); }
+  items.push({label:'파일로 내려받기',note:'.dhsave',fn:()=>{ closeMenu(); mode='idle'; saveToFile(); hud(); }});
+  mode='menu'; openMenu('저장',items,()=>{ mainMenu(); return false; });
+}
+function loadFrom(d){ try{ restore(d); }catch(e){ const msg='불러오기 실패: '+e.message; if(S){ toast(msg); } else { result(msg,'error'); status('불러오기 실패','error'); } } }
+function loadMenu(){
+  const items=[];
+  for(let n=1;n<=SLOTS;n++){ const d=readSlot(n);
+    items.push({label:`브라우저 칸 ${n}`,note:slotNote(d),off:!d,fn:()=>confirmMenu('지금 판을 버리고 불러올까?',[['불러온다',()=>loadFrom(readSlot(n))],['그만둔다',()=>{}]])}); }
+  items.push({label:'파일에서 불러오기',note:'.dhsave',fn:()=>{ closeMenu(); mode='idle'; hud(); $('#load-file').click(); }});
+  mode='menu'; openMenu('불러오기',items,()=>{ mainMenu(); return false; });
+}
+$('#load-file').onchange=async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{ loadFrom(JSON.parse(await f.text())); }catch(err){ loadFrom(null); } };
+$('#load-file-setup').onchange=$('#load-file').onchange;
+document.querySelector('.load-head label').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); $('#load-file-setup').click(); } });
+function renderSlotList(){
+  const box=$('#slot-list'); box.innerHTML='';
+  for(let n=1;n<=SLOTS;n++){ const d=readSlot(n); const b=document.createElement('button'); b.className='slot-btn'; b.disabled=!d;
+    b.innerHTML=`<b>칸 ${n}</b><span>${esc(slotNote(d))}</span>${d?`<small>${esc(d.summary.co1)} 대 ${esc(d.summary.co2)}</small>`:''}`;
+    b.onclick=()=>loadFrom(readSlot(n)); box.append(b); }
 }
 async function usePower(level){
   closeMenu(); mode='idle';
@@ -439,5 +512,5 @@ window.render_game_to_text=()=>JSON.stringify(S?{mode,day:S.day,turn:S.turn,winn
   funds:[S.players[1].funds,S.players[2].funds],meter:[S.players[1].meter,S.players[2].meter],
   units:S.units.filter(u=>!u.carried).map(u=>({id:u.id,t:u.type,o:u.owner,x:u.x,y:u.y,hp:u.hp,done:u.done}))}:{mode:'setup',cfg});
 window.__dongHyunJeon={get state(){return S;},key,get mode(){return mode;}};
-sortieCard(cfg); preview(cfg);
+sortieCard(cfg); preview(cfg); renderSlotList();
 })();

@@ -54,11 +54,12 @@
           <div class="sortie-card" id="sortie-card"></div>
           <p id="result" aria-live="polite">예제를 고른 뒤 출전을 눌러 보자. 지도·지휘관·선공·자금은 코드로만 정한다.</p>
           <div class="file-row"><button id="save">.dh 저장</button><label class="file-label">.dh 열기<input id="open" type="file" accept=".dh,.txt,text/plain" hidden></label></div>
+          <div class="load-box"><div class="load-head"><strong>저장한 판 불러오기</strong><label class="file-label" tabindex="0">파일에서 불러오기<input id="load-file-setup" type="file" accept=".dhsave,.json,application/json" hidden></label></div><div class="slot-list" id="slot-list"></div></div>
         </section>
         <section class="hud" id="hud" hidden>
           <div class="co-cards" id="co-cards"></div>
           <div class="info-card" id="info-card"></div>
-          <div class="log-card"><div class="section-title"><h2><span>C</span> 전투 기록</h2><button id="concede" class="small-btn">항복하고 출전 준비로</button></div><ol id="log"></ol></div>
+          <div class="log-card"><div class="section-title"><h2><span>C</span> 전투 기록</h2><button id="concede" class="small-btn">항복하고 출전 준비로</button></div><ol id="log"></ol></div><input id="load-file" type="file" accept=".dhsave,.json,application/json" hidden>
           <div class="keys"><span><kbd>←↑↓→</kbd>커서</span><span><kbd>X</kbd>확인</span><span><kbd>Z</kbd>취소</span><span><kbd>S</kbd>다음 유닛</span><span><kbd>A</kbd>정보</span><span><kbd>Shift</kbd>사거리</span><span><kbd>Enter</kbd>메뉴·턴 종료</span></div>
         </section>
       </div>
@@ -94,7 +95,7 @@
       <tr><td><kbd>S</kbd></td><td>아직 움직이지 않은 다음 유닛으로</td></tr>
       <tr><td><kbd>A</kbd></td><td>커서 아래 유닛·지형 정보</td></tr>
       <tr><td><kbd>Shift</kbd></td><td>누르고 있는 동안 커서 아래 유닛의 공격 범위</td></tr>
-      <tr><td><kbd>Enter</kbd></td><td>메뉴: 지휘관 능력 · 턴 종료 · 항복</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>메뉴: 지휘관 능력 · 턴 종료 · 저장 · 불러오기 · 항복</td></tr>
     </tbody></table></div>
     <div><h3>규칙 요약</h3><ul>
       <li>점령: 거점의 점령값은 20. 보병류가 한 번에 자기 표시 체력만큼 줄인다. 다른 칸으로 옮기면 처음부터 다시.</li>
