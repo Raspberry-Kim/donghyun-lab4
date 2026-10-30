@@ -741,13 +741,14 @@ const MAP_SRC = [
     '.c.=..f.r..f=..c',
     '...=.^^.r.c.=.f.',
     'm..=...rr..f=.c.']},
-  {id:3, name:'푸른 해협', note:'18×12 · 바다·공항·항구 · 육해공', half:[
-    '~~~~~~_.f..c.==DI^',
-    '~~*~~~_..f..==N..f',
-    '~~~~~~~R==.c..=.E.',
-    '~~~~~~~__.fa.^=..c',
-    '~~~__.~~~~p_.^^=..',
-    '~~_.c_~~..___f.=..']},
+  {id:3, name:'푸른 해협', note:'20×14 · 섬을 도는 바다 · 육해공', half:[
+    '~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~~~_.f..c.==DI^~',
+    '~~~*~~~_..f..==N..f~',
+    '~~~~~~~~R==.c..=.E.~',
+    '~~~~~~~~__.fa.^=..c~',
+    '~~~~__.~~~~p_.^^=..~',
+    '~~~_.c_~~..___f.=..~']},
   {id:4, name:'산맥 회랑', note:'20×12 · 산맥 사이 두 길 · 공항', half:[
     '^^^ff..c...^^=..cDI^',
     '^^f...============Nf',
@@ -768,13 +769,14 @@ const MAP_SRC = [
     '.f=.ff.c.ff.=..c',
     'c.=.f.m..f.f=.f.',
     '.f=.ff..f..f=f.f']},
-  {id:7, name:'모래톱 해안', note:'18×12 · 해안선 · 항구 둘', half:[
-    '~~~~__..f.c..==DI^',
-    '~~*~~_.f...c.=N..f',
-    '~~~~R_..=====.=..c',
-    '~~~~~_.c=..f..=.f.',
-    '~~~_p_..=.m...=...',
-    '~~~~__.f=..c..f..f']},
+  {id:7, name:'모래톱 해안', note:'20×14 · 섬을 도는 바다 · 항구 둘', half:[
+    '~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~__..f.c..==DI^~',
+    '~~~*~~_.f...c.=N..f~',
+    '~~~~~R_..=====.=..c~',
+    '~~~~~~_.c=..f..=.f.~',
+    '~~~~_p_..=.m...=...~',
+    '~~~~~__.f=..c..f..f~']},
   {id:8, name:'세 갈래 길', note:'20×12 · 세 갈래 전선', half:[
     '^^..c.f..=====.cDI.^',
     '^.f..===.=...=..N..f',
@@ -853,22 +855,23 @@ const MAP_SRC = [
     '~~_.....~~*~~...c.~~',
     '~~~_.c.~~~~~~_.f.R~~',
     '~~~_~~~~~~~~~~~~_~~~']},
-  {id:19, name:'긴 해안선', note:'22×12 · 해안 길 · 육해공', half:[
+  {id:19, name:'긴 해안선', note:'22×12 · 해안 길 · 섬을 도는 바다', half:[
     '~~~~~~~~~~~~~~~~~~~~~~',
     '~~~~p__..c...f...cDI^~',
     '~~~_..f..=======..N.f~',
-    '~~_.c..===.f...=..c..E',
-    '~_..m..=..c..f.=.f....',
-    '_..f..c=....^^.=..c.f.']},
-  {id:20, name:'최후의 전선', note:'24×16 · 가장 큰 지도 · 모든 병종', half:[
-    '~~~~~~p_..^^..c....f.cDI',
-    '~~*~~~_..f^^.m.....f.=N.',
-    '~~~~~R_.==============.E',
-    '~~~~~~_.=..c..f=.c...c..',
-    '~~__.._.=.f..^^=.....f..',
-    '~_..c...=..m..^=..c...c.',
-    '_.f.....=.a...f=....f...',
-    '..c..rrr#rrrrrr#rrr..f..']}
+    '~~_.c..===.f...=..c.E~',
+    '~_..m..=..c..f.=.f...~',
+    '~..f..c=....^^.=..c.f~']},
+  {id:20, name:'최후의 전선', note:'26×18 · 가장 큰 지도 · 모든 병종', half:[
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~',
+    '~~~~~~~p_..^^..c....f.cDI~',
+    '~~~*~~~_..f^^.m.....f.=N.~',
+    '~~~~~~R_.==============.E~',
+    '~~~~~~~_.=..c..f=.c...c..~',
+    '~~~__.._.=.f..^^=.....f..~',
+    '~~_..c...=..m..^=..c...c.~',
+    '~_.f.....=.a...f=....f...~',
+    '~..c..rrr#rrrrrr#rrr..f..~']}
 ];
 const CELL = {
   '.':['plain',0],'f':['forest',0],'^':['mountain',0],'r':['river',0],'=':['road',0],'#':['bridge',0],
@@ -1248,6 +1251,23 @@ function makeCtx(s,p){
   ctx.repairs=t=>{const out=[];for(let y=0;y<s.map.H;y++)for(let x=0;x<s.map.W;x++){const c=s.map.grid[y][x];if(c.owner===p&&(t==='air'?c.t==='airport':t==='ship'?c.t==='port':['city','hq','factory'].includes(c.t)))out.push([x,y]);}return out;};
   return ctx;
 }
+// 이 항구의 바다가 적에게 닿는가: 뱃길로 갈 수 있는 바다에서 두 칸 안에 적 유닛(항공 제외)이나 적 거점이 있으면 쓸모 있는 항구다
+function navyCtx(s,ctx){
+  if(ctx.navy) return ctx.navy;
+  const W=s.map.W,H=s.map.H, ships=u=>UNITS[u.type].cls==='ship';
+  const marks=[];
+  for(const e of ctx.enemies) if(!['plane','copter'].includes(UNITS[e.type].cls)) marks.push([e.x,e.y]);
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const c=s.map.grid[y][x]; if(TERRAIN[c.t].prop&&c.owner===ctx.q) marks.push([x,y]); }
+  const useful=new Map();
+  ctx.navy={
+    mine:ctx.mine.filter(ships), enemy:ctx.enemies.filter(ships),
+    useful(x,y){ const k=x+','+y; if(useful.has(k)) return useful.get(k);
+      const f=field(s,'ship',[[x,y]]); let ok=false;
+      for(const [mx,my] of marks){ for(let dy=-2;dy<=2&&!ok;dy++) for(let dx=-2+Math.abs(dy);dx<=2-Math.abs(dy)&&!ok;dx++){ const X=mx+dx,Y=my+dy; if(X>=0&&Y>=0&&X<W&&Y<H&&isFinite(f(X,Y))) ok=true; } if(ok) break; }
+      useful.set(k,ok); return ok; }
+  };
+  return ctx.navy;
+}
 function getField(s,ctx,mt,name,srcFn){
   const k=mt+':'+name; if(!ctx.fields[k]){ const src=srcFn(); ctx.fields[k]=src.length?field(s,mt,src):()=>Infinity; } return ctx.fields[k];
 }
@@ -1302,6 +1322,7 @@ function bestFor(s,ctx,u){
     else if(d.indirect){ const r=E.rangeOf(s,u); const ef=enemyField(x,y); pos=-Math.max(0,ef-r[1])*170 - (ef<r[0]?400:0); }
     else if(!d.range) pos=-propField(x,y)*40; // 수송 유닛: AI가 거의 만들지 않음
     else pos=-Math.min(enemyField(x,y), hqField(x,y)+4)*170;
+    if(!isFinite(pos)&&d.cls==='ship') pos=-propField(x,y)*120;
     if(!isFinite(pos)) pos=-hqField(x,y)*100||-5000;
     if(!isFinite(pos)) pos=-5000;
     // 생산 거점 막지 않기
@@ -1330,9 +1351,19 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     return null;
   }
   if(kind==='port'){
-    if(enemyShips.some(u=>u.type==='bship'||u.type==='lander') && affordable('sub')) return 'sub';
-    if(enemyShips.some(u=>u.type==='sub') && affordable('cruiser')) return 'cruiser';
-    if(budget>=42000 && affordable('bship')) return 'bship';
+    // 함선 생산: 적 함선에는 맞수를 내고, 적에게 닿는 바다라면 함대를 조금씩 늘린다(수송함은 AI가 쓰지 않아 만들지 않는다)
+    const N=navyCtx(s,ctx); if(!N.useful(x,y)) return null;
+    const mine=t=>cnt(N.mine,u=>u.type===t), foe=t=>cnt(N.enemy,u=>u.type===t);
+    const enemyCopter=cnt(ctx.enemies,u=>UNITS[u.type].cls==='copter');
+    const want=Math.min(4, 1+Math.floor(s.day/5)+N.enemy.length);
+    if(N.mine.length>want) return null; // 맞수까지 합쳐도 원하는 수보다 한 척 넘게는 두지 않는다
+    if(foe('sub')>mine('cruiser') && affordable('cruiser')) return 'cruiser';
+    if(foe('bship')+foe('lander')+foe('cruiser')>mine('sub') && affordable('sub')) return 'sub';
+    if(enemyCopter>=2 && enemyCopter>mine('cruiser')*2 && affordable('cruiser')) return 'cruiser';
+    if(N.mine.length>=want) return null;
+    if(affordable('bship') && (mine('bship')<=mine('sub')+mine('cruiser') || budget>=34000)) return 'bship';
+    if(N.enemy.length && affordable('sub') && budget>=24000) return 'sub';
+    if(affordable('cruiser') && budget>=24000 && mine('cruiser')<mine('bship')) return 'cruiser';
     return null;
   }
   // 공장(또는 뿡뿡의 도시)
@@ -1342,6 +1373,7 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     if(affordable('inf')) return 'inf';
   }
   if(enemyAir.length>myAA && affordable('aa')) return 'aa';
+  if(ctx.navySave) return null; // 전함 값을 모으는 중: 보병 말고는 아낀다
   const myDirect=cnt(ctx.mine,u=>['tank','md','neo'].includes(u.type)), myInd=cnt(ctx.mine,u=>['art','rocket'].includes(u.type));
   const r=E.rng(s);
   if(myInd*2<myDirect && budget<26000 && affordable('art') && r<0.6) return 'art';
@@ -1377,7 +1409,12 @@ function next(s){
   const ctx=makeCtx(s,p);
   const spots=[];
   for(let y=0;y<s.map.H;y++) for(let x=0;x<s.map.W;x++){ const opts=E.canBuildAt(s,p,x,y); if(opts.length&&!E.unitAt(s,x,y)) spots.push([x,y,opts]); }
-  spots.sort((a,b)=>({factory:0,city:1,airport:2,port:3}[s.map.grid[a[1]][a[0]].t]-{factory:0,city:1,airport:2,port:3}[s.map.grid[b[1]][b[0]].t]));
+  const N=navyCtx(s,ctx), myFoot=ctx.mine.filter(u=>UNITS[u.type].cls==='foot').length;
+  const portFirst = myFoot>=3 && N.mine.length<Math.min(4,1+Math.floor(s.day/5)+N.enemy.length) && P.funds>=18000 && spots.some(([x,y])=>s.map.grid[y][x].t==='port'&&N.useful(x,y));
+  // 쓸모 있는 항구가 있는데 전함이 하나도 없으면, 4일째부터 전함 값이 모일 때까지 공장 생산을 줄인다
+  ctx.navySave = s.day>=4 && myFoot>=3 && !N.mine.some(u=>u.type==='bship') && P.funds<E.priceOf(s,p,'bship') && spots.some(([x,y])=>s.map.grid[y][x].t==='port'&&N.useful(x,y));
+  const rank=portFirst?{port:0,factory:1,city:2,airport:3}:{factory:0,city:1,airport:2,port:3};
+  spots.sort((a,b)=>rank[s.map.grid[a[1]][a[0]].t]-rank[s.map.grid[b[1]][b[0]].t]);
   if(!s._aiTried) s._aiTried=new Set();
   for(const [x,y,opts] of spots){
     const k=E.key(x,y); if(s._aiTried.has(k)) continue; s._aiTried.add(k);
@@ -1983,7 +2020,7 @@ const examples=[
   code:wrap([block('지도 1 · 첫번째 교전',1,1),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 1 · 뭉치',3,1),block('선공 1 · 내가 먼저',4,1),sortie])},
  {id:'field',title:'02 · 첫 들판 (A)',note:'강과 다리가 있는 지상전. 다리를 먼저 차지해 보자. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 2 · 첫 들판',1,2),block('나의 지휘관 2 · 뚱띠',2,2),block('CPU 지휘관 4 · 포동이',3,4),sortie])},
- {id:'strait',title:'03 · 푸른 해협 (A-N-AF)',note:'바다·공항·항구가 모두 있는 지도. 시작 자금 5000으로 보병을 서둘러 내보내 거점을 넓힌다. 지휘관·선공·자금 추천값은 코드에 있다.',
+ {id:'strait',title:'03 · 푸른 해협 (A-N-AF)',note:'바다·공항·항구가 모두 있는 지도. 바다가 섬을 한 바퀴 돌아 두 진영의 함선이 만난다. 시작 자금 5000으로 보병을 서둘러 내보내 거점을 넓힌다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 3 · 푸른 해협',1,3),block('나의 지휘관 3 · 또치',2,3),block('CPU 지휘관 5 · 뿡뿡',3,5),block('시작 자금 5000',5,5000),sortie])},
  {id:'ridge',title:'04 · 산맥 회랑 (A-AF)',note:'산맥 사이 두 길을 두고 겨룬다. 이번에는 CPU가 먼저 움직인다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 4 · 산맥 회랑',1,4),block('나의 지휘관 5 · 뿡뿡',2,5),block('CPU 지휘관 2 · 뚱띠',3,2),block('선공 2 · CPU가 먼저',4,2),sortie])},
@@ -1991,7 +2028,7 @@ const examples=[
   code:wrap([block('지도 5 · 쌍둥이 다리',1,5),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 2 · 뚱띠',3,2),sortie])},
  {id:'map6',title:'06 · 숲속 오솔길 (A)',note:'숲이 많아 방어가 쉽다. 보병과 자주포로 한 걸음씩 밀어 보자. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 6 · 숲속 오솔길',1,6),block('나의 지휘관 3 · 또치',2,3),block('CPU 지휘관 1 · 뭉치',3,1),sortie])},
- {id:'map7',title:'07 · 모래톱 해안 (A-N)',note:'한쪽은 바다, 한쪽은 육지다. 항구에서 순양함·잠수함도 뽑을 수 있다. 지휘관·선공·자금 추천값은 코드에 있다.',
+ {id:'map7',title:'07 · 모래톱 해안 (A-N)',note:'한쪽은 바다, 한쪽은 육지다. 바다는 섬 바깥으로 이어져 상대 해안까지 간다. 항구에서 순양함·잠수함도 뽑을 수 있다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 7 · 모래톱 해안',1,7),block('나의 지휘관 4 · 포동이',2,4),block('CPU 지휘관 5 · 뿡뿡',3,5),sortie])},
  {id:'map8',title:'08 · 세 갈래 길 (A)',note:'위·가운데·아래 세 갈래 길이 있다. 어느 쪽을 먼저 밀지 고르자. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 8 · 세 갈래 길',1,8),block('나의 지휘관 2 · 뚱띠',2,2),block('CPU 지휘관 3 · 또치',3,3),sortie])},
@@ -2015,9 +2052,9 @@ const examples=[
   code:wrap([block('지도 17 · 겹겹 산성',1,17),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 3 · 또치',3,3),block('선공 2 · CPU가 먼저',4,2),sortie])},
  {id:'map18',title:'18 · 쌍둥이 섬 (A-N-AF)',note:'두 섬이 모래톱 길로 이어진다. 바다를 끼고 싸운다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 18 · 쌍둥이 섬',1,18),block('나의 지휘관 3 · 또치',2,3),block('CPU 지휘관 4 · 포동이',3,4),block('시작 자금 3000',5,3000),sortie])},
- {id:'map19',title:'19 · 긴 해안선 (A-N-AF)',note:'긴 해안을 따라 길이 난다. 공항·항구가 모두 있다. 지휘관·선공·자금 추천값은 코드에 있다.',
+ {id:'map19',title:'19 · 긴 해안선 (A-N-AF)',note:'긴 해안을 따라 길이 나고, 바다가 섬을 한 바퀴 돈다. 공항·항구가 모두 있다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 19 · 긴 해안선',1,19),block('나의 지휘관 4 · 포동이',2,4),block('CPU 지휘관 2 · 뚱띠',3,2),sortie])},
- {id:'map20',title:'20 · 최후의 전선 (A-N-AF)',note:'가장 큰 지도. 공장·공항·항구를 모두 쓰는 긴 전쟁이다. 지휘관·선공·자금 추천값은 코드에 있다.',
+ {id:'map20',title:'20 · 최후의 전선 (A-N-AF)',note:'가장 큰 지도. 공장·공항·항구를 모두 쓰는 긴 전쟁이다. 바깥 바다로 두 진영의 항구가 이어진다. 지휘관·선공·자금 추천값은 코드에 있다.',
   code:wrap([block('지도 20 · 최후의 전선',1,20),block('나의 지휘관 1 · 뭉치',2,1),block('CPU 지휘관 5 · 뿡뿡',3,5),block('시작 자금 5000',5,5000),sortie])},
  {id:'vars',title:'21 · 변수로 고르기 (A)',note:'동현에 지도 번호, 동동현에 지휘관 번호를 담아 출력한다. 시드를 고정하면 같은 선택에서 같은 운이 나온다.',
   code:wrap(['ㅋㅋ 동현 = 지도 번호, 동동현 = 지휘관 번호','동현아 '+expression(2),'동동현아 '+expression(4),

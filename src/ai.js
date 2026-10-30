@@ -49,6 +49,23 @@ function makeCtx(s,p){
   ctx.repairs=t=>{const out=[];for(let y=0;y<s.map.H;y++)for(let x=0;x<s.map.W;x++){const c=s.map.grid[y][x];if(c.owner===p&&(t==='air'?c.t==='airport':t==='ship'?c.t==='port':['city','hq','factory'].includes(c.t)))out.push([x,y]);}return out;};
   return ctx;
 }
+// 이 항구의 바다가 적에게 닿는가: 뱃길로 갈 수 있는 바다에서 두 칸 안에 적 유닛(항공 제외)이나 적 거점이 있으면 쓸모 있는 항구다
+function navyCtx(s,ctx){
+  if(ctx.navy) return ctx.navy;
+  const W=s.map.W,H=s.map.H, ships=u=>UNITS[u.type].cls==='ship';
+  const marks=[];
+  for(const e of ctx.enemies) if(!['plane','copter'].includes(UNITS[e.type].cls)) marks.push([e.x,e.y]);
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const c=s.map.grid[y][x]; if(TERRAIN[c.t].prop&&c.owner===ctx.q) marks.push([x,y]); }
+  const useful=new Map();
+  ctx.navy={
+    mine:ctx.mine.filter(ships), enemy:ctx.enemies.filter(ships),
+    useful(x,y){ const k=x+','+y; if(useful.has(k)) return useful.get(k);
+      const f=field(s,'ship',[[x,y]]); let ok=false;
+      for(const [mx,my] of marks){ for(let dy=-2;dy<=2&&!ok;dy++) for(let dx=-2+Math.abs(dy);dx<=2-Math.abs(dy)&&!ok;dx++){ const X=mx+dx,Y=my+dy; if(X>=0&&Y>=0&&X<W&&Y<H&&isFinite(f(X,Y))) ok=true; } if(ok) break; }
+      useful.set(k,ok); return ok; }
+  };
+  return ctx.navy;
+}
 function getField(s,ctx,mt,name,srcFn){
   const k=mt+':'+name; if(!ctx.fields[k]){ const src=srcFn(); ctx.fields[k]=src.length?field(s,mt,src):()=>Infinity; } return ctx.fields[k];
 }
@@ -103,6 +120,7 @@ function bestFor(s,ctx,u){
     else if(d.indirect){ const r=E.rangeOf(s,u); const ef=enemyField(x,y); pos=-Math.max(0,ef-r[1])*170 - (ef<r[0]?400:0); }
     else if(!d.range) pos=-propField(x,y)*40; // 수송 유닛: AI가 거의 만들지 않음
     else pos=-Math.min(enemyField(x,y), hqField(x,y)+4)*170;
+    if(!isFinite(pos)&&d.cls==='ship') pos=-propField(x,y)*120;
     if(!isFinite(pos)) pos=-hqField(x,y)*100||-5000;
     if(!isFinite(pos)) pos=-5000;
     // 생산 거점 막지 않기
@@ -131,9 +149,19 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     return null;
   }
   if(kind==='port'){
-    if(enemyShips.some(u=>u.type==='bship'||u.type==='lander') && affordable('sub')) return 'sub';
-    if(enemyShips.some(u=>u.type==='sub') && affordable('cruiser')) return 'cruiser';
-    if(budget>=42000 && affordable('bship')) return 'bship';
+    // 함선 생산: 적 함선에는 맞수를 내고, 적에게 닿는 바다라면 함대를 조금씩 늘린다(수송함은 AI가 쓰지 않아 만들지 않는다)
+    const N=navyCtx(s,ctx); if(!N.useful(x,y)) return null;
+    const mine=t=>cnt(N.mine,u=>u.type===t), foe=t=>cnt(N.enemy,u=>u.type===t);
+    const enemyCopter=cnt(ctx.enemies,u=>UNITS[u.type].cls==='copter');
+    const want=Math.min(4, 1+Math.floor(s.day/5)+N.enemy.length);
+    if(N.mine.length>want) return null; // 맞수까지 합쳐도 원하는 수보다 한 척 넘게는 두지 않는다
+    if(foe('sub')>mine('cruiser') && affordable('cruiser')) return 'cruiser';
+    if(foe('bship')+foe('lander')+foe('cruiser')>mine('sub') && affordable('sub')) return 'sub';
+    if(enemyCopter>=2 && enemyCopter>mine('cruiser')*2 && affordable('cruiser')) return 'cruiser';
+    if(N.mine.length>=want) return null;
+    if(affordable('bship') && (mine('bship')<=mine('sub')+mine('cruiser') || budget>=34000)) return 'bship';
+    if(N.enemy.length && affordable('sub') && budget>=24000) return 'sub';
+    if(affordable('cruiser') && budget>=24000 && mine('cruiser')<mine('bship')) return 'cruiser';
     return null;
   }
   // 공장(또는 뿡뿡의 도시)
@@ -143,6 +171,7 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     if(affordable('inf')) return 'inf';
   }
   if(enemyAir.length>myAA && affordable('aa')) return 'aa';
+  if(ctx.navySave) return null; // 전함 값을 모으는 중: 보병 말고는 아낀다
   const myDirect=cnt(ctx.mine,u=>['tank','md','neo'].includes(u.type)), myInd=cnt(ctx.mine,u=>['art','rocket'].includes(u.type));
   const r=E.rng(s);
   if(myInd*2<myDirect && budget<26000 && affordable('art') && r<0.6) return 'art';
@@ -178,7 +207,12 @@ function next(s){
   const ctx=makeCtx(s,p);
   const spots=[];
   for(let y=0;y<s.map.H;y++) for(let x=0;x<s.map.W;x++){ const opts=E.canBuildAt(s,p,x,y); if(opts.length&&!E.unitAt(s,x,y)) spots.push([x,y,opts]); }
-  spots.sort((a,b)=>({factory:0,city:1,airport:2,port:3}[s.map.grid[a[1]][a[0]].t]-{factory:0,city:1,airport:2,port:3}[s.map.grid[b[1]][b[0]].t]));
+  const N=navyCtx(s,ctx), myFoot=ctx.mine.filter(u=>UNITS[u.type].cls==='foot').length;
+  const portFirst = myFoot>=3 && N.mine.length<Math.min(4,1+Math.floor(s.day/5)+N.enemy.length) && P.funds>=18000 && spots.some(([x,y])=>s.map.grid[y][x].t==='port'&&N.useful(x,y));
+  // 쓸모 있는 항구가 있는데 전함이 하나도 없으면, 4일째부터 전함 값이 모일 때까지 공장 생산을 줄인다
+  ctx.navySave = s.day>=4 && myFoot>=3 && !N.mine.some(u=>u.type==='bship') && P.funds<E.priceOf(s,p,'bship') && spots.some(([x,y])=>s.map.grid[y][x].t==='port'&&N.useful(x,y));
+  const rank=portFirst?{port:0,factory:1,city:2,airport:3}:{factory:0,city:1,airport:2,port:3};
+  spots.sort((a,b)=>rank[s.map.grid[a[1]][a[0]].t]-rank[s.map.grid[b[1]][b[0]].t]);
   if(!s._aiTried) s._aiTried=new Set();
   for(const [x,y,opts] of spots){
     const k=E.key(x,y); if(s._aiTried.has(k)) continue; s._aiTried.add(k);
