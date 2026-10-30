@@ -11,6 +11,8 @@ const won=n=>n.toLocaleString('ko-KR');
 
 /* ---------- 화면 전환과 탭 ---------- */
 $('#theme').onclick=()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';$('#theme').setAttribute('aria-pressed',String(dark));};
+const ATK_SND={inf:'gun',mech:'rocket',recon:'mg',tank:'cannon',md:'cannon',neo:'cannon',art:'shell',rocket:'rocket',aa:'flak',missile:'rocket',fighter:'rocket',bomber:'bomb',bcopter:'mg',bship:'cannon',cruiser:'flak',sub:'torpedo'};
+const DOWN_SND='explode';
 const SND=DHSFX('donghyun-jeon:sound'); let sndOver=null;
 function sndUI(){ const b=$('#sound'); b.setAttribute('aria-pressed',String(SND.on)); b.classList.toggle('muted',!SND.on); b.title=SND.on?'효과음 켬 (M)':'효과음 끔 (M)'; }
 $('#sound').onclick=()=>{ SND.set(!SND.on); sndUI(); }; sndUI();
@@ -176,10 +178,10 @@ const TN=t=>TERRAIN[t].name;
 function processEvents(){
   if(!S) return; const now=performance.now();
   for(const e of S.events){
-    if(e.k==='attack'){ log(`<b>${UN(e.at)}</b> → ${UN(e.dt)} ${e.dmg}%${e.counter?` · 반격 ${e.counter}%`:''}`,e.ao);
+    if(e.k==='attack'){ log(`<b>${UN(e.at)}</b> → ${UN(e.dt)} ${e.dmg}%${e.counter?` · 반격 ${e.counter}%`:''}`,e.ao); if(S.turn===1){ if(e.first&&e.counter) { SND.play(ATK_SND[e.dt]||'gun'); SND.play(ATK_SND[e.at]||'gun',0.3); } else { SND.play(ATK_SND[e.at]||'gun'); if(e.counter) SND.play(ATK_SND[e.dt]||'gun',0.35); } }
       ui.fx.push({k:'hit',x:e.dx,y:e.dy,t0:now,dur:420},{k:'num',x:e.dx,y:e.dy,t0:now,dur:900,text:'-'+e.dmg,col:'#ffe27a'});
       if(e.counter) ui.fx.push({k:'hit',x:e.ax,y:e.ay,t0:now+260,dur:420},{k:'num',x:e.ax,y:e.ay,t0:now+260,dur:900,text:'-'+e.counter,col:'#ffb0a0'}); }
-    else if(e.k==='destroy'){ log(`${side(e.owner)}의 <b>${UN(e.type)}</b> 격파`,3-e.owner); ui.fx.push({k:'boom',x:e.x,y:e.y,t0:now+120,dur:650}); }
+    else if(e.k==='destroy'){ log(`${side(e.owner)}의 <b>${UN(e.type)}</b> 격파`,3-e.owner); if(S.turn===1) SND.play(DOWN_SND,0.45); ui.fx.push({k:'boom',x:e.x,y:e.y,t0:now+120,dur:650}); }
     else if(e.k==='crash'){ log(`${side(e.owner)}의 <b>${UN(e.type)}</b> 연료가 떨어져 사라졌다`,e.owner); }
     else if(e.k==='capture'){ log(e.done?`<b>${UN(e.type)}</b> ${TN(e.tt)} 점령 완료`:`<b>${UN(e.type)}</b> ${TN(e.tt)} 점령 중 · 남은 ${e.left}`,e.owner); if(e.done&&!S.winner) SND.play(e.owner===1?'cheer':'alert'); if(e.done) ui.terrainVer++; }
     else if(e.k==='build'){ log(`<b>${UN(e.type)}</b> 생산`,e.owner); }
