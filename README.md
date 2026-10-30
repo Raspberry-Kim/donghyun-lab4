@@ -52,3 +52,7 @@ node build.cjs   # dist/index.html과 루트 index.html(GitHub Pages용) 단일 
 ## 라이선스
 
 코드: MIT (김동현). 글꼴: Black Han Sans, 나눔고딕코딩, Pretendard — 각각 SIL OFL 1.1 (`licenses/`).
+
+## 만든 사람
+
+인하대학교 의과대학 김동현 교수는 백신학·감염학을 연구한다. 동현전은 동현랭 시리즈의 다섯 번째 프로젝트이다.
