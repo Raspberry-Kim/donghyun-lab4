@@ -572,8 +572,8 @@ function draw(g, s, ui, now){
     if((d.fuel && u.fuel<=Math.max(10,(d.daily||0)*3)) || (d.ammo && u.ammo===0)){ if(Math.floor(now/500)%2){ g.fillStyle=C.k; g.fillRect(px+1,py+10,5,5); g.fillStyle=C.o; g.fillRect(px+2,py+11,3,3);} }
     if(u.cargo.length){ g.fillStyle=C.k; g.fillRect(px+1,py+1,5,5); g.fillStyle=C.w; g.fillRect(px+2,py+2,3,3); }
   }
-  // 눈: 이엉쉐의 능력이 켜져 있는 동안 흰빛과 눈송이
-  if(s.players.some(P=>P&&P.co===6&&P.power)){
+  // 눈: 꽥꽥의 능력이 켜져 있는 동안 흰빛과 눈송이
+  if(s.players.some(P=>P&&(P.pw||P.co)===6&&P.power)){
     g.fillStyle='rgba(236,244,255,.24)'; g.fillRect(0,0,map.W*T,map.H*T);
     const n=Math.floor(map.W*map.H/2), t=now/1000;
     g.fillStyle='#ffffff';

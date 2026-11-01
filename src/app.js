@@ -6,6 +6,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAPNAME=id=>MAPS.find(m=>m.id===id).name;
 const coName=n=>COS[n-1].name;
+const PWNAME=(co,pw)=>!pw||pw===co?`${coName(co)} 그대로`:`${pw} · ${coName(pw)}의 ${COS[pw-1].cop.name}·${COS[pw-1].scop.name}`;
 const INC=t=>t.owner&&S.players[t.owner].co===9?1100:1000;
 const DIVE_WORD=(type,on)=>type==='stealth'?(on?'은폐':'은폐 해제'):(on?'잠항':'부상');
 const UN=t=>UNITS[t].name;
@@ -29,7 +30,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
 $('.brand').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=play]').click();scrollTo({top:0,behavior:'smooth'});};
 
 /* ---------- 규칙 문서 표 ---------- */
-const coCard=c=>`<article><h4>${c.id} · ${c.name}<small>${c.role}</small></h4><p>${c.passive}</p><p><b>${c.cop.name}</b> ${'★'.repeat(c.cop.stars)} · ${c.cop.text}</p><p><b>${c.scop.name}</b> ${'★'.repeat(c.scop.stars)} · ${c.scop.text}</p><q>“${c.line}”</q></article>`;
+const coCard=c=>`<article><h4>${c.id} · ${c.name}<small>${c.role}</small></h4><p>${c.passive}</p><p><b>${c.cop.name}</b> ${'★'.repeat(c.cop.stars)} · ${c.cop.text}</p><p><b>${c.scop.name}</b> ${'★'.repeat(c.scop.stars)} · ${c.scop.text}</p><q>${c.line}</q></article>`;
 $('#co-grid').innerHTML=COS.filter(c=>!c.army).map(coCard).join('');
 $('#co-grid-bm').innerHTML=COS.filter(c=>c.army===2).map(coCard).join('');
 const MT={foot:'보병',mech:'기계화',tread:'궤도',tire:'바퀴',air:'항공',ship:'함선',lander:'수송함'};
@@ -74,19 +75,20 @@ $('#open').onchange=async e=>{const f=e.target.files[0];if(!f)return;code.value=
 $('#run').onclick=()=>sortie();
 
 /* ---------- 출전 규약 ---------- */
-const DEFAULT={map:1,co1:1,co2:1,first:1,funds:0,seed:0};
+const DEFAULT={map:1,co1:1,co2:1,pw1:0,pw2:0,first:1,funds:0,seed:0};
 let cfg={...DEFAULT};
 function parseSortie(out){
   const tok=out.split(/\s+/).filter(Boolean).map(Number), c={...DEFAULT}, err=[];
   let go=false;
   const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=COS.length,'1~'+COS.length],3:['CPU 지휘관','co2',v=>v>=1&&v<=COS.length,'1~'+COS.length],
-    4:['선공','first',v=>v===1||v===2,'1 또는 2'],5:['시작 자금','funds',v=>v>=0&&v<=30000&&v%1000===0,'0~30000, 1000 단위'],7:['난수 시드','seed',v=>v>=1&&v<=2147483646,'1~2147483646']};
+    4:['선공','first',v=>v===1||v===2,'1 또는 2'],5:['시작 자금','funds',v=>v>=0&&v<=30000&&v%1000===0,'0~30000, 1000 단위'],7:['난수 시드','seed',v=>v>=1&&v<=2147483646,'1~2147483646'],
+    8:['나의 특수기술','pw1',v=>v>=1&&v<=COS.length,'1~'+COS.length],9:['CPU 특수기술','pw2',v=>v>=1&&v<=COS.length,'1~'+COS.length]};
   for(let i=0;i<tok.length;i++){
     const n=tok[i];
     if(go){ err.push(`출전 명령 6 뒤에 ${tok.length-i}개의 정수가 더 나왔다. 6은 마지막에 출력하자.`); break; }
     if(n===6){ go=true; continue; }
     const r=rule[n];
-    if(!r){ err.push(`${i+1}번째 정수 ${n}은 출전 명령이 아니다. 명령은 1~7이다.`); break; }
+    if(!r){ err.push(`${i+1}번째 정수 ${n}은 출전 명령이 아니다. 명령은 1~9이다.`); break; }
     if(i+1>=tok.length){ err.push(`명령 ${n}(${r[0]}) 뒤에 값이 없다.`); break; }
     const v=tok[++i];
     if(!r[2](v)){ err.push(`${r[0]} 값 ${v}은 쓸 수 없다. ${r[3]}만 된다.`); break; }
@@ -95,7 +97,7 @@ function parseSortie(out){
   return {c,go,err};
 }
 function sortieCard(c){
-  $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],['CPU',`${c.co2} · ${coName(c.co2)}`],
+  $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],['CPU',`${c.co2} · ${coName(c.co2)}`],['나의 특수기술',PWNAME(c.co1,c.pw1)],['CPU 특수기술',PWNAME(c.co2,c.pw2)],
     ['선공',c.first===1?'나':'CPU'],['시작 자금',won(c.funds)],['난이도 · 안개','보통 · 없음']].map(([a,b])=>`<div><span>${a}</span><strong>${b}</strong></div>`).join('');
 }
 function result(text,kind){ const r=$('#result'); r.textContent=text; r.dataset.kind=kind||''; }
@@ -132,7 +134,7 @@ requestAnimationFrame(frame);
 
 /* ---------- 게임 시작·종료 ---------- */
 function startGame(c){
-  S=E.newGame({map:c.map,co1:c.co1,co2:c.co2,first:c.first,funds:c.funds,seed:c.seed||undefined});
+  S=E.newGame({map:c.map,co1:c.co1,co2:c.co2,pw1:c.pw1||0,pw2:c.pw2||0,first:c.first,funds:c.funds,seed:c.seed||undefined});
   S.events.length=0;
   ui={cursor:null,fx:[],terrainVer:(ui.terrainVer||0)+1}; size(S);
   const hq=findHQ(1); ui.cursor=[hq[0],hq[1]];
@@ -203,12 +205,12 @@ function stars(P,co){ const max=co.scop.stars, have=P.meter/STAR_VALUE; let h=''
   for(let i=0;i<max;i++){ const on=have>=i+1; h+=`<i class="${on?'on':''} ${i>=co.cop.stars?'big':''}" title="${i+1}"></i>`; } return h; }
 function hud(){
   if(!S) return;
-  $('#co-cards').innerHTML=[1,2].map(p=>{const P=S.players[p], co=COS[P.co-1], n=S.units.filter(u=>u.owner===p).length;
+  $('#co-cards').innerHTML=[1,2].map(p=>{const P=S.players[p], co=COS[P.co-1], pw=E.powOf(S,p), n=S.units.filter(u=>u.owner===p).length;
     return `<div class="co-card p${p} ${S.turn===p&&!S.winner?'turn':''}"><div class="who"><span>${p===1?'나 · 붉은 진영':'CPU · 푸른 진영'}</span><span>${S.turn===p?'차례':''}</span></div>
-    <div class="nm"><span class="co-face">${co.name[0]}</span><div><strong>${co.name}</strong><small>${co.role}</small></div></div>
+    <div class="nm"><span class="co-face">${co.name[0]}</span><div><strong>${co.name}</strong><small>${co.role}${pw!==co?` · 특수기술 ${pw.name}`:''}</small></div></div>
     <dl><dt>자금</dt><dd>${won(P.funds)}</dd><dt>거점</dt><dd>${E.propsOf(S,p)}</dd><dt>유닛</dt><dd>${n}</dd></dl>
-    <div class="stars" aria-label="지휘관 능력 별 ${Math.floor(P.meter/STAR_VALUE)}개">${stars(P,co)}</div>
-    ${P.power?`<span class="power-tag">${P.power===2?co.scop.name:co.cop.name} 사용 중</span>`:''}</div>`;}).join('');
+    <div class="stars" aria-label="지휘관 능력 별 ${Math.floor(P.meter/STAR_VALUE)}개">${stars(P,pw)}</div>
+    ${P.power?`<span class="power-tag">${P.power===2?pw.scop.name:pw.cop.name} 사용 중</span>`:''}</div>`;}).join('');
   $('#day').textContent=`${S.day}일째`;
   const tb=$('#turn-badge'); tb.textContent=S.turn===1?'나의 차례':'CPU 차례'; tb.className='p'+S.turn;
   if(!S.winner) status(mode==='cpu'||S.turn===2?'CPU가 생각하는 중':'나의 차례 · '+({idle:'유닛을 고르자',move:'갈 곳을 고르자',action:'명령을 고르자',target:'공격 대상을 고르자',unload:'내릴 곳을 고르자',menu:'메뉴',build:'생산',info:'정보'}[mode]||''));
@@ -247,7 +249,7 @@ function drawMenu(){
 function closeMenu(){ menu=null; $('#menu').hidden=true; }
 function confirmMenu(q,opts){ const prev=mode; mode='menu'; openMenu(q,opts.map(([label,fn])=>({label,fn:()=>{closeMenu();mode=prev==='menu'?'idle':prev;fn();hud();}})),()=>{mode=prev==='menu'?'idle':prev;}); }
 function mainMenu(){
-  const P=S.players[1], co=COS[P.co-1], items=[];
+  const P=S.players[1], co=E.powOf(S,1), items=[];
   if(!P.power){
     items.push({label:co.cop.name,note:'★'.repeat(co.cop.stars),off:P.meter<co.cop.stars*STAR_VALUE,fn:()=>usePower(1)});
     items.push({label:co.scop.name,note:'★'.repeat(co.scop.stars),off:P.meter<co.scop.stars*STAR_VALUE,fn:()=>usePower(2)});
@@ -256,7 +258,7 @@ function mainMenu(){
   items.push({label:'저장',fn:saveMenu});
   items.push({label:'불러오기',fn:loadMenu});
   items.push({label:'항복',fn:()=>$('#concede').click()});
-  mode='menu'; openMenu(`${S.day}일째 · ${co.name}`,items,()=>{mode='idle';});
+  mode='menu'; openMenu(`${S.day}일째 · ${coName(P.co)}`,items,()=>{mode='idle';});
 }
 
 /* ---------- 저장 · 불러오기 ----------
@@ -275,7 +277,7 @@ function restore(data){
   const st=data.state, m=MAPS.find(m=>m.id===st?.map?.id);
   if(!m||st.map.W!==m.W||st.map.H!==m.H||!Array.isArray(st.map.grid)||st.map.grid.length!==m.H) throw new Error('지도 정보가 맞지 않는다.');
   if(!Array.isArray(st.units)||st.units.some(u=>!UNITS[u.type])) throw new Error('유닛 정보가 맞지 않는다.');
-  if(!st.players||!st.players[1]||!st.players[2]||!COS[st.players[1].co-1]||!COS[st.players[2].co-1]) throw new Error('지휘관 정보가 맞지 않는다.');
+  if(!st.players||!st.players[1]||!st.players[2]||!COS[st.players[1].co-1]||!COS[st.players[2].co-1]||(st.players[1].pw&&!COS[st.players[1].pw-1])||(st.players[2].pw&&!COS[st.players[2].pw-1])) throw new Error('지휘관 정보가 맞지 않는다.');
   if(st.winner) throw new Error('이미 끝난 판이다.');
   const byId=new Map(st.units.map(u=>[u.id,u]));
   for(const u of st.units){ u.cargo=(u.cargo||[]).map(id=>byId.get(id)).filter(Boolean); }
@@ -346,8 +348,8 @@ function renderSlotList(){
 async function usePower(level){
   closeMenu(); mode='idle';
   if(!E.usePower(S,1,level)) return;
-  const co=COS[S.players[1].co-1], p=level===2?co.scop:co.cop;
-  busy=true; processEvents(); hud(); await banner(`${co.name} · ${p.name}`,p.text,'power',1100); busy=false; hud();
+  const co=E.powOf(S,1), p=level===2?co.scop:co.cop;
+  busy=true; processEvents(); hud(); await banner(`${coName(S.players[1].co)} · ${p.name}`,p.text,'power',1100); busy=false; hud();
 }
 function endTurnAsk(){
   closeMenu(); const n=E.readyUnits(S,1).length;
@@ -455,7 +457,7 @@ async function runCPU(){
   while(S && !S.winner && S.turn===2 && guard++<400){
     const a=AI.next(S);
     if(a.k==='end'){ AI.apply(S,a); break; }
-    if(a.k==='power'){ AI.apply(S,a); const co=COS[S.players[2].co-1], p=a.level===2?co.scop:co.cop; processEvents(); hud(); await banner(`CPU ${co.name} · ${p.name}`,p.text,'power',1000); continue; }
+    if(a.k==='power'){ AI.apply(S,a); const co=E.powOf(S,2), p=a.level===2?co.scop:co.cop; processEvents(); hud(); await banner(`CPU ${coName(S.players[2].co)} · ${p.name}`,p.text,'power',1000); continue; }
     if(a.k==='build'){ ui.cursor=[a.x,a.y]; hud(); await wait(220); AI.apply(S,a); processEvents(); hud(); await wait(160); continue; }
     if(a.k==='move'){
       const u=S.units.find(v=>v.id===a.id); ui.cursor=[u.x,u.y]; hud(); await wait(240);

@@ -19,57 +19,77 @@ function newGame(opts){
     units:[], nextId:1, day:1, turn:opts.first||1, first:opts.first||1, winner:0, reason:'',
     seed: opts.seed || (Math.floor(Math.random()*2147483646)+1),
     players:[null,
-      {co:opts.co1||1, funds:opts.funds||0, meter:0, power:0, ai:false, had:false, built:0, lost:0, kills:0},
-      {co:opts.co2||1, funds:opts.funds||0, meter:0, power:0, ai:true,  had:false, built:0, lost:0, kills:0}],
+      {co:opts.co1||1, pw:opts.pw1||opts.co1||1, funds:opts.funds||0, meter:0, power:0, ai:false, had:false, built:0, lost:0, kills:0},
+      {co:opts.co2||1, pw:opts.pw2||opts.co2||1, funds:opts.funds||0, meter:0, power:0, ai:true,  had:false, built:0, lost:0, kills:0}],
     events:[]
   };
   startTurn(state, state.turn, true);
   return state;
 }
 const coOf = (s,p) => COS[s.players[p].co-1];
+/* 특수기술(작은 능력·큰 능력)의 주인. 출전 명령 8·9로 고르고, 정하지 않으면 자기 지휘관의 것이다.
+   평소 능력(passive)은 언제나 지휘관(co)을 따르고, 능력을 쓸 때의 효과·별 수는 특수기술 주인(pw)을 따른다. */
+const pwId = P => P.pw || P.co;
+const powOf = (s,p) => COS[pwId(s.players[p])-1];
 const tile = (s,x,y) => (x>=0&&y>=0&&x<s.map.W&&y<s.map.H) ? s.map.grid[y][x] : null;
 const unitAt = (s,x,y) => s.units.find(u=>u.x===x&&u.y===y&&!u.carried) || null;
 function moveCost(type, t){ return MOVE_COST[UNITS[type].mt][TIDX[t]]; }
 function event(s, e){ s.events.push(e); if(s.events.length>2000) s.events.shift(); }
 
-/* ---- 지휘관 효과 ---- */
+/* ---- 지휘관 효과 (co: 평소 능력 · pw: 특수기술) ---- */
 function isDirectNonFoot(u){ const d=UNITS[u.type]; return !d.indirect && d.cls!=='foot' && d.range; }
 function atkValue(s,u){
-  const p=s.players[u.owner], co=p.co, d=UNITS[u.type]; let v=100;
-  if(p.power) v+=10;
-  if(co===1 && p.power===2) v+=10;
-  if(co===2){ if(d.indirect) v-=10; else if(isDirectNonFoot(u)) v+=20+(p.power===1?10:p.power===2?30:0); }
-  if(co===3){ if(d.cls==='foot') v+=20+(p.power===1?10:p.power===2?20:0); else if(!d.indirect) v-=10; }
-  if(co===7){ if(d.indirect) v+=20+(p.power?20:0); else if(isDirectNonFoot(u)) v-=20; }
-  if(co===8){ v-=10; if(p.power===2) v+=Math.floor((p.pom||0)*3/1000); }
+  const p=s.players[u.owner], co=p.co, pw=pwId(p), lv=p.power, d=UNITS[u.type]; let v=100;
+  if(lv) v+=10;
+  // 평소 능력
+  if(co===2){ if(d.indirect) v-=10; else if(isDirectNonFoot(u)) v+=20; }
+  if(co===3){ if(d.cls==='foot') v+=20; else if(!d.indirect) v-=10; }
+  if(co===7){ if(d.indirect) v+=20; else if(isDirectNonFoot(u)) v-=20; }
+  if(co===8) v-=10;
+  // 특수기술
+  if(lv){
+    if(pw===1 && lv===2) v+=10;
+    if(pw===2 && isDirectNonFoot(u)) v+= lv===1?10:30;
+    if(pw===3 && d.cls==='foot') v+= lv===1?10:20;
+    if(pw===7 && d.indirect) v+=20;
+    if(pw===8 && lv===2) v+=Math.floor((p.pom||0)*3/1000);
+  }
   return v;
 }
 function defValue(s,u){ return 100 + (s.players[u.owner].power?10:0); }
-function luckMax(s,p){ const P=s.players[p]; if(P.co===4) return P.power===2?99:P.power===1?59:19; return 9; }
+function luckMax(s,p){ const P=s.players[p];
+  if(P.power && pwId(P)===4) return P.power===2?99:59;
+  return P.co===4?19:9; }
 function moveOf(s,u){
-  const p=s.players[u.owner], d=UNITS[u.type]; let m=d.move;
-  if(p.co===1 && p.power===2) m+=1;
-  if(p.co===2 && isDirectNonFoot(u)) m+= p.power===1?1:p.power===2?2:0;
-  if(p.co===3){ if(d.carry && d.carry.includes('foot')) m+=1; if(d.cls==='foot') m+= p.power===1?1:p.power===2?2:0; }
+  const p=s.players[u.owner], pw=pwId(p), lv=p.power, d=UNITS[u.type]; let m=d.move;
+  if(p.co===3 && d.carry && d.carry.includes('foot')) m+=1;
+  if(lv){
+    if(pw===1 && lv===2) m+=1;
+    if(pw===2 && isDirectNonFoot(u)) m+=lv;
+    if(pw===3 && d.cls==='foot') m+=lv;
+  }
   return m;
 }
 function rangeOf(s,u){
   const d=UNITS[u.type]; if(!d.range) return null; let [a,b]=d.range;
   const P=s.players[u.owner];
   if(P.co===2 && d.indirect) b=Math.max(a,b-1);
-  if(P.co===7 && d.indirect) b+=1+P.power;
+  if(P.co===7 && d.indirect) b+=1;
+  if(P.power && pwId(P)===7 && d.indirect) b+=P.power;
   return [a,b];
 }
-function costMult(s,p){ const P=s.players[p]; if(P.co===5) return P.power?0.5:0.9; if(P.co===8) return 0.8; return 1; }
-// 눈: 이엉쉐가 능력을 쓴 뒤 그의 다음 차례까지 상대 유닛의 칸 이동 비용 +1. 이엉쉐 자신은 눈의 영향을 받지 않는다.
-function snowFor(s,p){ const Q=s.players[3-p]; return !!(Q && Q.co===6 && Q.power); }
-function snowOn(s){ return snowFor(s,1)||snowFor(s,2); }
+function costMult(s,p){ const P=s.players[p];
+  if(P.power && pwId(P)===5) return 0.5;
+  return P.co===5?0.9 : P.co===8?0.8 : 1; }
+// 눈: 꽥꽥의 특수기술을 쓴 뒤 그 차례 주인의 다음 차례까지 상대 유닛의 칸 이동 비용 +1. 지휘관 꽥꽥은 평소 능력으로 눈의 영향을 받지 않는다.
+function snowFor(s,p){ const Q=s.players[3-p]; return !!(Q && Q.power && pwId(Q)===6 && s.players[p].co!==6); }
+function snowOn(s){ return [1,2].some(p=>{const P=s.players[p]; return P.power && pwId(P)===6;}); }
 function incomeOf(s,p){ const n=propsOf(s,p); return n*1000 + (s.players[p].co===9 ? n*100 : 0); }
 function priceOf(s,p,type){ return Math.round(UNITS[type].cost*costMult(s,p)/100)*100; }
 function canBuildAt(s,p,x,y){
   const t=tile(s,x,y); if(!t||t.owner!==p) return [];
   if(BUILD[t.t]) return BUILD[t.t];
-  if(t.t==='city' && s.players[p].co===5 && s.players[p].power===2) return BUILD.factory;
+  if(t.t==='city' && pwId(s.players[p])===5 && s.players[p].power===2) return BUILD.factory;
   return [];
 }
 
@@ -147,7 +167,7 @@ function forecast(s,a,d,ax,ay){
   a.x=sx; a.y=sy;
   return lo ? {lo:Math.min(lo.dmg,d.hp), hi:Math.min(hi.dmg,d.hp), counter:clo?clo.dmg:0, counterMin:chi?chi.dmg:0} : null;
 }
-function charge(s,p,value){ const P=s.players[p]; if(P.power) return; const max=coOf(s,p).scop.stars*STAR_VALUE; P.meter=Math.min(max, P.meter+value); }
+function charge(s,p,value){ const P=s.players[p]; if(P.power) return; const max=powOf(s,p).scop.stars*STAR_VALUE; P.meter=Math.min(max, P.meter+value); }
 function hurt(s,attacker,victim,dmg){
   const before=disp(victim.hp); victim.hp=Math.max(0,victim.hp-dmg);
   const lost=(before-disp(victim.hp))*UNITS[victim.type].cost/10;
@@ -167,7 +187,7 @@ function attack(s,a,d){
   if(r.w==='pri') a.ammo--;
   const res={dmg:Math.min(r.dmg,d.hp), counter:0};
   const lost=hurt(s,a,d,r.dmg);
-  const AP=s.players[a.owner]; if(AP.co===9 && AP.power===2 && lost>0){ const g=Math.floor(lost/2); AP.funds+=g; res.bonds=g; } // 전쟁 채권
+  const AP=s.players[a.owner]; if(pwId(AP)===9 && AP.power===2 && lost>0){ const g=Math.floor(lost/2); AP.funds+=g; res.bonds=g; } // 전쟁 채권
   if(d.hp>0 && canCounter(s,d,a)){
     const c=damage(s,d,a,'rand'); if(c){ if(c.w==='pri') d.ammo--; res.counter=Math.min(c.dmg,a.hp); hurt(s,d,a,c.dmg); }
   }
@@ -187,7 +207,7 @@ function capture(s,u){
   const t=tile(s,u.x,u.y);
   const P=s.players[u.owner];
   let pts=disp(u.hp); if(P.co===3) pts=Math.floor(pts*1.5);
-  if(P.co===3 && P.power===2) pts=20;
+  if(pwId(P)===3 && P.power===2) pts=20;
   if(t.capId!==u.id){ t.cp=20; t.capId=u.id; }
   t.cp-=pts;
   const done=t.cp<=0, wasHQt=t.t==='hq';
@@ -241,13 +261,13 @@ function build(s,p,x,y,type){
   return u;
 }
 function usePower(s,p,level){
-  const P=s.players[p], co=coOf(s,p), need=(level===2?co.scop:co.cop).stars*STAR_VALUE;
+  const P=s.players[p], co=powOf(s,p), pw=pwId(P), need=(level===2?co.scop:co.cop).stars*STAR_VALUE;
   if(P.power||P.meter<need) return false;
   P.meter-=need; if(level===2) P.meter=0; P.power=level;
-  if(P.co===1){ const add=level===2?50:20; for(const u of s.units) if(u.owner===p) u.hp=Math.min(100,u.hp+add); }
-  if(P.co===6 && level===2){ for(const u of s.units) if(u.owner!==p) u.hp=Math.max(1,u.hp-20); } // 0.1까지만 줄인다
-  if(P.co===8){ if(level===1) P.funds=Math.floor(P.funds*1.5); else P.pom=P.funds; }
-  if(P.co===9 && level===1){ const Q=s.players[3-p], qmax=coOf(s,3-p).scop.stars*STAR_VALUE; Q.meter=Math.max(0, Q.meter-Math.floor(qmax*P.funds/50000)); }
+  if(pw===1){ const add=level===2?50:20; for(const u of s.units) if(u.owner===p) u.hp=Math.min(100,u.hp+add); }
+  if(pw===6 && level===2){ for(const u of s.units) if(u.owner!==p) u.hp=Math.max(1,u.hp-20); } // 0.1까지만 줄인다
+  if(pw===8){ if(level===1) P.funds=Math.floor(P.funds*1.5); else P.pom=P.funds; }
+  if(pw===9 && level===1){ const Q=s.players[3-p], qmax=powOf(s,3-p).scop.stars*STAR_VALUE; Q.meter=Math.max(0, Q.meter-Math.floor(qmax*P.funds/50000)); }
   event(s,{k:'power',p,level,name:(level===2?co.scop:co.cop).name});
   return true;
 }
@@ -308,6 +328,6 @@ function readyUnits(s,p){ return s.units.filter(u=>u.owner===p&&!u.done&&!u.carr
 
 const API={newGame,tile,unitAt,moveCost,reach,pathTo,stopOK,canLoad,canJoin,weaponVs,damage,forecast,targetsFrom,canCounter,attack,
   commitMove,capture,supplyAround,load,unload,unloadSpots,join,build,usePower,startTurn,endTurn,checkEnd,concede,readyUnits,
-  priceOf,canBuildAt,moveOf,rangeOf,atkValue,propsOf,incomeOf,snowFor,snowOn,disp,dist,key,coOf,rng,terrainStars};
+  priceOf,canBuildAt,moveOf,rangeOf,atkValue,propsOf,incomeOf,snowFor,snowOn,powOf,pwId,disp,dist,key,coOf,rng,terrainStars};
 if(typeof module!=='undefined') module.exports=API; else root.Engine=API;
 })(typeof self!=='undefined'?self:this);

@@ -109,7 +109,7 @@ function bestFor(s,ctx,u){
     // 점령
     if(d.cap && TERRAIN[t.t].prop && t.owner!==ctx.p){
       const left=t.capId===u.id?t.cp:20; let pts=hpD; if(s.players[ctx.p].co===3) pts=Math.floor(pts*1.5);
-      const finish=pts>=left||(s.players[ctx.p].co===3&&s.players[ctx.p].power===2);
+      const finish=pts>=left||(E.pwId(s.players[ctx.p])===3&&s.players[ctx.p].power===2);
       let v=PROP_VALUE[t.t]*(finish?1.4:0.9)+(t.owner?600:0)+(t.capId===u.id?1500:0);
       consider(v-risk*0.6, {x,y,c,act:'capture'});
     }
@@ -193,15 +193,15 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
 }
 function next(s){
   if(s.winner) return null;
-  const p=s.turn, P=s.players[p], co=COS[P.co-1];
+  const p=s.turn, P=s.players[p], co=E.powOf(s,p), pw=E.pwId(P);
   if(!P.power){
     if(P.meter>=co.scop.stars*STAR_VALUE) return {k:'power',level:2};
     if(P.meter>=co.cop.stars*STAR_VALUE && co.scop.stars-co.cop.stars>=3 && P.meter<(co.scop.stars-1)*STAR_VALUE){
       const ctx0=makeCtx(s,p);
       const Q=s.players[3-p];
-      const want = P.co===1 ? ctx0.mine.reduce((n,u)=>n+(10-E.disp(u.hp)),0)>=8
-        : P.co===8 ? P.funds>=8000
-        : P.co===9 ? P.funds>=10000 && Q.meter>=STAR_VALUE && !Q.power
+      const want = pw===1 ? ctx0.mine.reduce((n,u)=>n+(10-E.disp(u.hp)),0)>=8
+        : pw===8 ? P.funds>=8000
+        : pw===9 ? P.funds>=10000 && Q.meter>=STAR_VALUE && !Q.power
         : ctx0.mine.length>=4;
       if(want) return {k:'power',level:1};
     }
