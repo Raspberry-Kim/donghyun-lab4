@@ -287,7 +287,7 @@ function startTurn(s,p,first){
     u.done=false;
     const d=UNITS[u.type];
     if(!first && d.daily && !u.carried){
-      const t=tile(s,u.x,u.y), safe=(d.cls==='ship'&&t.t==='port')||((d.cls==='plane'||d.cls==='copter')&&t.t==='airport');
+      const t=tile(s,u.x,u.y), safe=t.owner===p&&((d.cls==='ship'&&t.t==='port')||((d.cls==='plane'||d.cls==='copter')&&t.t==='airport')); // 내 공항·항구에서만 보충(원작). 중립·상대 것은 연료가 준다
       if(!safe){
         u.fuel-=d.daily+(u.dived?(d.diveFuel||0):0);
         if(u.fuel<=0){ u.fuel=0; destroy(s,u,0); event(s,{k:'crash',type:u.type,x:u.x,y:u.y,owner:p}); continue; }
