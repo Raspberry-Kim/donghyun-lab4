@@ -231,6 +231,23 @@ bomber:[
 '................',
 '................',
 '................'],
+stealth:[
+'................',
+'................',
+'................',
+'................',
+'.kk.............',
+'.kBkk...........',
+'..kBBkkk........',
+'..kBmmmBBkkk....',
+'.kBBmmmmmBBcwkk.',
+'kBBBBBBBBBBBBBBk',
+'.kkkdddddddkkkk.',
+'...kBBmmk.......',
+'...kBBk.........',
+'...kkk..........',
+'................',
+'................'],
 bcopter:[
 '................',
 '................',
@@ -314,6 +331,23 @@ lander:[
 '..kkkkkkkkkkkk..',
 '................',
 '................',
+'................',
+'................'],
+carrier:[
+'................',
+'................',
+'................',
+'................',
+'...........kkk..',
+'..........kGGGk.',
+'..........kGwGk.',
+'kkkkkkkkkkkGGGkk',
+'kGwGGGwGGGwGGGGk',
+'kkkkkkkkkkkkkkkk',
+'kmmmmmmmmmmmmmmk',
+'.kmwmmwmmwmmmmk.',
+'..kddddddddddk..',
+'...kkkkkkkkkk...',
 '................',
 '................'],
 sub:[
@@ -525,7 +559,7 @@ function draw(g, s, ui, now){
     if(ui.hide===u.id) continue;
     const bob=(!u.done && u.owner===s.turn && !ui.anim && Math.floor(now/400)%2)?1:0;
     const spr=sprite(u.type,u.owner,u.done&&u.owner===s.turn);
-    const air=UNITS[u.type].cls==='air'||['fighter','bomber','bcopter','tcopter'].includes(u.type);
+    const air=UNITS[u.type].cls==='air'||['fighter','bomber','stealth','bcopter','tcopter'].includes(u.type);
     if(!u.dived){ const rx=Math.round(px), ry=Math.round(py), tc=u.owner===1?'rgba(229,72,58,.55)':'rgba(58,120,232,.55)';
       g.fillStyle='rgba(15,20,10,.25)'; if(air){ g.fillRect(rx+5,ry+15,6,1); } else { g.fillRect(rx+3,ry+15,10,1); }
       g.fillStyle=tc; if(air){ g.fillRect(rx+4,ry+14,8,1); } else { g.fillRect(rx+2,ry+14,12,1); g.fillRect(rx+3,ry+13,10,1); } }
@@ -537,6 +571,13 @@ function draw(g, s, ui, now){
     const d=UNITS[u.type];
     if((d.fuel && u.fuel<=Math.max(10,(d.daily||0)*3)) || (d.ammo && u.ammo===0)){ if(Math.floor(now/500)%2){ g.fillStyle=C.k; g.fillRect(px+1,py+10,5,5); g.fillStyle=C.o; g.fillRect(px+2,py+11,3,3);} }
     if(u.cargo.length){ g.fillStyle=C.k; g.fillRect(px+1,py+1,5,5); g.fillStyle=C.w; g.fillRect(px+2,py+2,3,3); }
+  }
+  // 눈: 이엉쉐의 능력이 켜져 있는 동안 흰빛과 눈송이
+  if(s.players.some(P=>P&&P.co===6&&P.power)){
+    g.fillStyle='rgba(236,244,255,.24)'; g.fillRect(0,0,map.W*T,map.H*T);
+    const n=Math.floor(map.W*map.H/2), t=now/1000;
+    g.fillStyle='#ffffff';
+    for(let i=0;i<n;i++){ const h=hash(i,7,3), X=((h%(map.W*T))+Math.sin(t*1.3+i)*3+map.W*T)%(map.W*T), Y=((h>>>9)%(map.H*T)+t*(10+(h>>>20)%10))%(map.H*T); g.fillRect(Math.round(X),Math.round(Y),(h>>>5)%3?1:2,1); }
   }
   // 효과
   ui.fx=(ui.fx||[]).filter(f=>now-f.t0<f.dur);

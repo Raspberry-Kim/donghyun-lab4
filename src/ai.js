@@ -143,6 +143,9 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
   const kind=s.map.grid[y][x].t;
   if(kind==='airport'){
     if(enemyAir.length>myAA && affordable('fighter')) return 'fighter';
+    // 스텔스기: 숨으면 전투기·스텔스기만 때릴 수 있다. 적 전투기가 적고 돈이 넉넉할 때 두 대까지
+    const hunters=cnt(ctx.enemies,u=>u.type==='fighter'||u.type==='stealth');
+    if(hunters<=1 && affordable('stealth') && budget>=26000 && cnt(ctx.mine,u=>u.type==='stealth')<2) return 'stealth';
     const aaE=cnt(ctx.enemies,u=>u.type==='aa'||u.type==='missile');
     if(aaE<=1 && affordable('bomber') && budget>30000) return 'bomber';
     if(aaE<=2 && affordable('bcopter')) return 'bcopter';
@@ -158,6 +161,8 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     if(foe('sub')>mine('cruiser') && affordable('cruiser')) return 'cruiser';
     if(foe('bship')+foe('lander')+foe('cruiser')>mine('sub') && affordable('sub')) return 'sub';
     if(enemyCopter>=2 && enemyCopter>mine('cruiser')*2 && affordable('cruiser')) return 'cruiser';
+    // 항공모함: 적 항공기가 둘 이상이고 아직 없으면 한 척
+    if(enemyAir.length>=2 && mine('carrier')<1 && affordable('carrier') && budget>=price('carrier')+2000) return 'carrier';
     if(N.mine.length>=want) return null;
     if(affordable('bship') && (mine('bship')<=mine('sub')+mine('cruiser') || budget>=34000)) return 'bship';
     if(N.enemy.length && affordable('sub') && budget>=24000) return 'sub';
@@ -174,6 +179,8 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
   if(ctx.navySave) return null; // 전함 값을 모으는 중: 보병 말고는 아낀다
   const myDirect=cnt(ctx.mine,u=>['tank','md','neo'].includes(u.type)), myInd=cnt(ctx.mine,u=>['art','rocket'].includes(u.type));
   const r=E.rng(s);
+  if(P.co===7 && myInd<=myDirect && affordable('rocket') && r<0.5) return 'rocket'; // 지슝은 간접 공격을 더 쓴다
+  if(P.co===7 && myInd<=myDirect && affordable('art')) return 'art';
   if(myInd*2<myDirect && budget<26000 && affordable('art') && r<0.6) return 'art';
   if(myInd*2<myDirect && affordable('rocket') && r<0.35) return 'rocket';
   if(affordable('neo') && enemyArmor>=2 && budget>=30000) return 'neo';
@@ -191,7 +198,12 @@ function next(s){
     if(P.meter>=co.scop.stars*STAR_VALUE) return {k:'power',level:2};
     if(P.meter>=co.cop.stars*STAR_VALUE && co.scop.stars-co.cop.stars>=3 && P.meter<(co.scop.stars-1)*STAR_VALUE){
       const ctx0=makeCtx(s,p);
-      if(P.co===1 ? ctx0.mine.reduce((n,u)=>n+(10-E.disp(u.hp)),0)>=8 : ctx0.mine.length>=4) return {k:'power',level:1};
+      const Q=s.players[3-p];
+      const want = P.co===1 ? ctx0.mine.reduce((n,u)=>n+(10-E.disp(u.hp)),0)>=8
+        : P.co===8 ? P.funds>=8000
+        : P.co===9 ? P.funds>=10000 && Q.meter>=STAR_VALUE && !Q.power
+        : ctx0.mine.length>=4;
+      if(want) return {k:'power',level:1};
     }
   }
   const ready=E.readyUnits(s,p);
@@ -232,7 +244,7 @@ function apply(s,a){
     E.commitMove(s,u,a.x,a.y,a.cost);
     if(a.act==='attack'){ const t=s.units.find(v=>v.id===a.target); if(t) E.attack(s,u,t); }
     else if(a.act==='capture') E.capture(s,u);
-    if(s.units.includes(u)) u.done=true;
+    if(s.units.includes(u)){ u.done=true; if(u.type==='stealth') u.dived=u.fuel>24; } // 스텔스기는 연료가 넉넉하면 숨는다
     return true;
   }
 }

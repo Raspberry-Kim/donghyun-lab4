@@ -40,6 +40,8 @@ function atkValue(s,u){
   if(co===1 && p.power===2) v+=10;
   if(co===2){ if(d.indirect) v-=10; else if(isDirectNonFoot(u)) v+=20+(p.power===1?10:p.power===2?30:0); }
   if(co===3){ if(d.cls==='foot') v+=20+(p.power===1?10:p.power===2?20:0); else if(!d.indirect) v-=10; }
+  if(co===7){ if(d.indirect) v+=20+(p.power?20:0); else if(isDirectNonFoot(u)) v-=20; }
+  if(co===8){ v-=10; if(p.power===2) v+=Math.floor((p.pom||0)*3/1000); }
   return v;
 }
 function defValue(s,u){ return 100 + (s.players[u.owner].power?10:0); }
@@ -53,10 +55,16 @@ function moveOf(s,u){
 }
 function rangeOf(s,u){
   const d=UNITS[u.type]; if(!d.range) return null; let [a,b]=d.range;
-  if(s.players[u.owner].co===2 && d.indirect) b=Math.max(a,b-1);
+  const P=s.players[u.owner];
+  if(P.co===2 && d.indirect) b=Math.max(a,b-1);
+  if(P.co===7 && d.indirect) b+=1+P.power;
   return [a,b];
 }
-function costMult(s,p){ const P=s.players[p]; if(P.co===5) return P.power?0.5:0.9; return 1; }
+function costMult(s,p){ const P=s.players[p]; if(P.co===5) return P.power?0.5:0.9; if(P.co===8) return 0.8; return 1; }
+// 눈: 이엉쉐가 능력을 쓴 뒤 그의 다음 차례까지 상대 유닛의 칸 이동 비용 +1. 이엉쉐 자신은 눈의 영향을 받지 않는다.
+function snowFor(s,p){ const Q=s.players[3-p]; return !!(Q && Q.co===6 && Q.power); }
+function snowOn(s){ return snowFor(s,1)||snowFor(s,2); }
+function incomeOf(s,p){ const n=propsOf(s,p); return n*1000 + (s.players[p].co===9 ? n*100 : 0); }
 function priceOf(s,p,type){ return Math.round(UNITS[type].cost*costMult(s,p)/100)*100; }
 function canBuildAt(s,p,x,y){
   const t=tile(s,x,y); if(!t||t.owner!==p) return [];
@@ -68,7 +76,7 @@ function canBuildAt(s,p,x,y){
 /* ---- 이동 ---- */
 function reach(s,u,opt={}){
   // 다익스트라: 이동력과 연료 중 작은 값까지. 적 유닛은 통과할 수 없다.
-  const pts = Math.min(moveOf(s,u), u.fuel);
+  const pts = Math.min(moveOf(s,u), u.fuel), snow = snowFor(s,u.owner)?1:0;
   const W=s.map.W,H=s.map.H, dist=new Map(), prev=new Map();
   const open=[[0,u.x,u.y]]; dist.set(key(u.x,u.y),0);
   while(open.length){
@@ -77,7 +85,7 @@ function reach(s,u,opt={}){
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
       const nx=x+dx, ny=y+dy; if(nx<0||ny<0||nx>=W||ny>=H) continue;
       const mc=moveCost(u.type, s.map.grid[ny][nx].t); if(!mc) continue;
-      const nc=c+mc; if(nc>pts) continue;
+      const nc=c+mc+snow; if(nc>pts) continue;
       const o=unitAt(s,nx,ny); if(o && o.owner!==u.owner && !opt.ignoreUnits) continue;
       const k=key(nx,ny); if(!dist.has(k)||nc<dist.get(k)){ dist.set(k,nc); prev.set(k,key(x,y)); open.push([nc,nx,ny]); }
     }
@@ -99,7 +107,7 @@ function stopOK(s,u,x,y){
 
 /* ---- 전투 ---- */
 function weaponVs(s,a,d){ // 사용할 무기와 기본 피해
-  if(d.dived && !(a.type==='sub'||a.type==='cruiser')) return null;
+  if(d.dived){ const hb=UNITS[d.type].hitBy; if(!hb || !hb.includes(a.type)) return null; } // 잠항 잠수함·은폐 스텔스기
   const tab=DMG[a.type], i=UIDX[d.type];
   if(tab.pri && tab.pri[i]!=null && a.ammo>0) return {w:'pri', b:tab.pri[i]};
   if(tab.sec && tab.sec[i]!=null) return {w:'sec', b:tab.sec[i]};
@@ -145,6 +153,7 @@ function hurt(s,attacker,victim,dmg){
   const lost=(before-disp(victim.hp))*UNITS[victim.type].cost/10;
   charge(s,victim.owner,lost); charge(s,attacker.owner,lost/2);
   if(victim.hp<=0) destroy(s,victim,attacker.owner);
+  return lost;
 }
 function destroy(s,u,by){
   for(const c of u.cargo){ const i=s.units.indexOf(c); if(i>=0) s.units.splice(i,1); }
@@ -157,11 +166,12 @@ function attack(s,a,d){
   const r=damage(s,a,d,'rand'); if(!r) return null;
   if(r.w==='pri') a.ammo--;
   const res={dmg:Math.min(r.dmg,d.hp), counter:0};
-  hurt(s,a,d,r.dmg);
+  const lost=hurt(s,a,d,r.dmg);
+  const AP=s.players[a.owner]; if(AP.co===9 && AP.power===2 && lost>0){ const g=Math.floor(lost/2); AP.funds+=g; res.bonds=g; } // 전쟁 채권
   if(d.hp>0 && canCounter(s,d,a)){
     const c=damage(s,d,a,'rand'); if(c){ if(c.w==='pri') d.ammo--; res.counter=Math.min(c.dmg,a.hp); hurt(s,d,a,c.dmg); }
   }
-  event(s,{k:'attack', a:a.id, d:d.id, at:a.type, dt:d.type, ao:a.owner, do:d.owner, ax:a.x, ay:a.y, dx:d.x, dy:d.y, dmg:res.dmg, counter:res.counter});
+  event(s,{k:'attack', bonds:res.bonds||0, a:a.id, d:d.id, at:a.type, dt:d.type, ao:a.owner, do:d.owner, ax:a.x, ay:a.y, dx:d.x, dy:d.y, dmg:res.dmg, counter:res.counter});
   checkEnd(s);
   return res;
 }
@@ -235,6 +245,9 @@ function usePower(s,p,level){
   if(P.power||P.meter<need) return false;
   P.meter-=need; if(level===2) P.meter=0; P.power=level;
   if(P.co===1){ const add=level===2?50:20; for(const u of s.units) if(u.owner===p) u.hp=Math.min(100,u.hp+add); }
+  if(P.co===6 && level===2){ for(const u of s.units) if(u.owner!==p) u.hp=Math.max(1,u.hp-20); } // 0.1까지만 줄인다
+  if(P.co===8){ if(level===1) P.funds=Math.floor(P.funds*1.5); else P.pom=P.funds; }
+  if(P.co===9 && level===1){ const Q=s.players[3-p], qmax=coOf(s,3-p).scop.stars*STAR_VALUE; Q.meter=Math.max(0, Q.meter-Math.floor(qmax*P.funds/50000)); }
   event(s,{k:'power',p,level,name:(level===2?co.scop:co.cop).name});
   return true;
 }
@@ -248,7 +261,7 @@ function repairKind(t,u){
 }
 function startTurn(s,p,first){
   s.turn=p; const P=s.players[p]; P.power=0;
-  P.funds+=propsOf(s,p)*1000;
+  P.pom=0; P.funds+=incomeOf(s,p);
   const mine=s.units.filter(u=>u.owner===p);
   for(const u of mine){
     u.done=false;
@@ -256,7 +269,7 @@ function startTurn(s,p,first){
     if(!first && d.daily && !u.carried){
       const t=tile(s,u.x,u.y), safe=(d.cls==='ship'&&t.t==='port')||((d.cls==='plane'||d.cls==='copter')&&t.t==='airport');
       if(!safe){
-        u.fuel-=d.daily+(u.dived?4:0);
+        u.fuel-=d.daily+(u.dived?(d.diveFuel||0):0);
         if(u.fuel<=0){ u.fuel=0; destroy(s,u,0); event(s,{k:'crash',type:u.type,x:u.x,y:u.y,owner:p}); continue; }
       }
     }
@@ -272,8 +285,8 @@ function startTurn(s,p,first){
     }
   }
   for(const u of s.units.filter(u=>u.owner===p&&!u.carried&&UNITS[u.type].supply)) supplyAround(s,u);
-  for(const u of s.units.filter(u=>u.owner===p&&u.carried&&s.units.find(t=>t.cargo.includes(u))?.type==='cruiser')) refill(u);
-  event(s,{k:'turn',p,day:s.day,income:propsOf(s,p)*1000});
+  for(const u of s.units.filter(u=>u.owner===p&&u.carried&&['cruiser','carrier'].includes(s.units.find(t=>t.cargo.includes(u))?.type))) refill(u);
+  event(s,{k:'turn',p,day:s.day,income:incomeOf(s,p)});
   checkEnd(s);
 }
 function endTurn(s){
@@ -295,6 +308,6 @@ function readyUnits(s,p){ return s.units.filter(u=>u.owner===p&&!u.done&&!u.carr
 
 const API={newGame,tile,unitAt,moveCost,reach,pathTo,stopOK,canLoad,canJoin,weaponVs,damage,forecast,targetsFrom,canCounter,attack,
   commitMove,capture,supplyAround,load,unload,unloadSpots,join,build,usePower,startTurn,endTurn,checkEnd,concede,readyUnits,
-  priceOf,canBuildAt,moveOf,rangeOf,atkValue,propsOf,disp,dist,key,coOf,rng,terrainStars};
+  priceOf,canBuildAt,moveOf,rangeOf,atkValue,propsOf,incomeOf,snowFor,snowOn,disp,dist,key,coOf,rng,terrainStars};
 if(typeof module!=='undefined') module.exports=API; else root.Engine=API;
 })(typeof self!=='undefined'?self:this);

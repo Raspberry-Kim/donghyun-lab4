@@ -6,12 +6,14 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const MAPNAME=id=>MAPS.find(m=>m.id===id).name;
 const coName=n=>COS[n-1].name;
+const INC=t=>t.owner&&S.players[t.owner].co===9?1100:1000;
+const DIVE_WORD=(type,on)=>type==='stealth'?(on?'은폐':'은폐 해제'):(on?'잠항':'부상');
 const UN=t=>UNITS[t].name;
 const won=n=>n.toLocaleString('ko-KR');
 
 /* ---------- 화면 전환과 탭 ---------- */
 $('#theme').onclick=()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'light';$('#theme').setAttribute('aria-pressed',String(dark));};
-const ATK_SND={inf:'gun',mech:'rocket',recon:'mg',tank:'cannon',md:'cannon',neo:'cannon',art:'shell',rocket:'rocket',aa:'flak',missile:'rocket',fighter:'rocket',bomber:'bomb',bcopter:'mg',bship:'cannon',cruiser:'flak',sub:'torpedo'};
+const ATK_SND={inf:'gun',mech:'rocket',recon:'mg',tank:'cannon',md:'cannon',neo:'cannon',art:'shell',rocket:'rocket',aa:'flak',missile:'rocket',fighter:'rocket',bomber:'bomb',bcopter:'mg',stealth:'rocket',bship:'cannon',cruiser:'flak',sub:'torpedo',carrier:'rocket'};
 const DOWN_SND='explode';
 const SND=DHSFX('donghyun-jeon:sound'); let sndOver=null;
 function sndUI(){ const b=$('#sound'); b.setAttribute('aria-pressed',String(SND.on)); b.classList.toggle('muted',!SND.on); b.title=SND.on?'효과음 켬 (M)':'효과음 끔 (M)'; }
@@ -27,7 +29,9 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{
 $('.brand').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=play]').click();scrollTo({top:0,behavior:'smooth'});};
 
 /* ---------- 규칙 문서 표 ---------- */
-$('#co-grid').innerHTML=COS.map(c=>`<article><h4>${c.id} · ${c.name}<small>${c.role}</small></h4><p>${c.passive}</p><p><b>${c.cop.name}</b> ${'★'.repeat(c.cop.stars)} · ${c.cop.text}</p><p><b>${c.scop.name}</b> ${'★'.repeat(c.scop.stars)} · ${c.scop.text}</p><q>“${c.line}”</q></article>`).join('');
+const coCard=c=>`<article><h4>${c.id} · ${c.name}<small>${c.role}</small></h4><p>${c.passive}</p><p><b>${c.cop.name}</b> ${'★'.repeat(c.cop.stars)} · ${c.cop.text}</p><p><b>${c.scop.name}</b> ${'★'.repeat(c.scop.stars)} · ${c.scop.text}</p><q>“${c.line}”</q></article>`;
+$('#co-grid').innerHTML=COS.filter(c=>!c.army).map(coCard).join('');
+$('#co-grid-bm').innerHTML=COS.filter(c=>c.army===2).map(coCard).join('');
 const MT={foot:'보병',mech:'기계화',tread:'궤도',tire:'바퀴',air:'항공',ship:'함선',lander:'수송함'};
 $('#unit-table').innerHTML='<thead><tr><th>병종</th><th>가격</th><th>이동</th><th>이동 유형</th><th>연료</th><th>탄약</th><th>사거리</th><th>생산</th></tr></thead><tbody>'+
   UNIT_ORDER.map(t=>{const d=UNITS[t];const where=Object.keys(BUILD).find(k=>BUILD[k].includes(t));return `<tr><td>${d.name}</td><td>${won(d.cost)}</td><td>${d.move}</td><td>${MT[d.mt]}</td><td>${d.fuel}${d.daily?` (−${d.daily}/일)`:''}</td><td>${d.ammo||'—'}</td><td>${d.range?(d.range[0]===d.range[1]?d.range[0]:d.range.join('~')):'—'}</td><td>${{factory:'공장',airport:'공항',port:'항구'}[where]}</td></tr>`;}).join('')+'</tbody>';
@@ -75,7 +79,7 @@ let cfg={...DEFAULT};
 function parseSortie(out){
   const tok=out.split(/\s+/).filter(Boolean).map(Number), c={...DEFAULT}, err=[];
   let go=false;
-  const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=5,'1~5'],3:['CPU 지휘관','co2',v=>v>=1&&v<=5,'1~5'],
+  const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=COS.length,'1~'+COS.length],3:['CPU 지휘관','co2',v=>v>=1&&v<=COS.length,'1~'+COS.length],
     4:['선공','first',v=>v===1||v===2,'1 또는 2'],5:['시작 자금','funds',v=>v>=0&&v<=30000&&v%1000===0,'0~30000, 1000 단위'],7:['난수 시드','seed',v=>v>=1&&v<=2147483646,'1~2147483646']};
   for(let i=0;i<tok.length;i++){
     const n=tok[i];
@@ -178,7 +182,7 @@ const TN=t=>TERRAIN[t].name;
 function processEvents(){
   if(!S) return; const now=performance.now();
   for(const e of S.events){
-    if(e.k==='attack'){ log(`<b>${UN(e.at)}</b> → ${UN(e.dt)} ${e.dmg}%${e.counter?` · 반격 ${e.counter}%`:''}`,e.ao); if(S.turn===1){ if(e.first&&e.counter) { SND.play(ATK_SND[e.dt]||'gun'); SND.play(ATK_SND[e.at]||'gun',0.3); } else { SND.play(ATK_SND[e.at]||'gun'); if(e.counter) SND.play(ATK_SND[e.dt]||'gun',0.35); } }
+    if(e.k==='attack'){ log(`<b>${UN(e.at)}</b> → ${UN(e.dt)} ${e.dmg}%${e.counter?` · 반격 ${e.counter}%`:''}${e.bonds?` · 전쟁 채권 +${won(e.bonds)}`:''}`,e.ao); if(S.turn===1){ if(e.first&&e.counter) { SND.play(ATK_SND[e.dt]||'gun'); SND.play(ATK_SND[e.at]||'gun',0.3); } else { SND.play(ATK_SND[e.at]||'gun'); if(e.counter) SND.play(ATK_SND[e.dt]||'gun',0.35); } }
       ui.fx.push({k:'hit',x:e.dx,y:e.dy,t0:now,dur:420},{k:'num',x:e.dx,y:e.dy,t0:now,dur:900,text:'-'+e.dmg,col:'#ffe27a'});
       if(e.counter) ui.fx.push({k:'hit',x:e.ax,y:e.ay,t0:now+260,dur:420},{k:'num',x:e.ax,y:e.ay,t0:now+260,dur:900,text:'-'+e.counter,col:'#ffb0a0'}); }
     else if(e.k==='destroy'){ log(`${side(e.owner)}의 <b>${UN(e.type)}</b> 격파`,3-e.owner); if(S.turn===1) SND.play(DOWN_SND,0.45); ui.fx.push({k:'boom',x:e.x,y:e.y,t0:now+120,dur:650}); }
@@ -217,9 +221,9 @@ function infoCard(){
     $('#tile-info').textContent=`예상 피해 ${f.lo}~${f.hi}% · 반격 최대 ${f.counter}%`; return; }
   const [x,y]=ui.cursor, t=S.map.grid[y][x], u=E.unitAt(S,x,y), td=TERRAIN[t.t];
   let h=`<h3>${td.name}${td.prop?` · ${t.owner?side(t.owner):'중립'}`:''}<small>방어 ★${td.def}</small></h3>`;
-  if(td.prop) h+=`<div class="row"><span>점령값 <b>${t.capId?t.cp:20}</b>/20</span><span>${t.t==='hq'?'점령하면 승리':t.t==='city'?'수입 1000 · 회복':'수입 1000 · 생산'}</span></div>`;
+  if(td.prop) h+=`<div class="row"><span>점령값 <b>${t.capId?t.cp:20}</b>/20</span><span>${t.t==='hq'?'점령하면 승리':t.t==='city'?`수입 ${INC(t)} · 회복`:`수입 ${INC(t)} · 생산`}</span></div>`;
   if(u){ const d=UNITS[u.type], r=E.rangeOf(S,u);
-    h+=`<h3 style="margin-top:8px">${d.name} · ${side(u.owner)}<small>체력 ${Math.ceil(u.hp/10)}/10</small></h3><div class="row"><span>이동 <b>${E.moveOf(S,u)}</b></span><span>연료 <b>${u.fuel}</b>/${d.fuel}</span><span>탄약 <b>${d.ammo?u.ammo+'/'+d.ammo:'—'}</b></span><span>사거리 <b>${r?(r[0]===r[1]?r[0]:r.join('~')):'—'}</b></span>${u.cargo.length?`<span>탑재 <b>${u.cargo.map(c=>UN(c.type)).join(', ')}</b></span>`:''}${u.dived?'<span><b>잠항 중</b></span>':''}</div>`;
+    h+=`<h3 style="margin-top:8px">${d.name} · ${side(u.owner)}<small>체력 ${Math.ceil(u.hp/10)}/10</small></h3><div class="row"><span>이동 <b>${E.moveOf(S,u)}</b></span><span>연료 <b>${u.fuel}</b>/${d.fuel}</span><span>탄약 <b>${d.ammo?u.ammo+'/'+d.ammo:'—'}</b></span><span>사거리 <b>${r?(r[0]===r[1]?r[0]:r.join('~')):'—'}</b></span>${u.dived?`<span><b>${u.type==='stealth'?'은폐':'잠항'} 중</b></span>`:''}${u.cargo.length?`<span>탑재 <b>${u.cargo.map(c=>UN(c.type)).join(', ')}</b></span>`:''}${u.dived?'<span><b>잠항 중</b></span>':''}</div>`;
     if(u.owner===1&&S.turn===1&&mode==='idle') h+=`<p>${u.done?'이번 차례에 행동을 마쳤다.':'X로 고르면 이동 범위가 보인다.'}</p>`;
   } else if(mode==='idle'&&S.turn===1){ const b=E.canBuildAt(S,1,x,y); h+=`<p>${b.length?'X로 생산 메뉴를 연다.':'Enter로 메뉴(지휘관 능력 · 턴 종료)를 연다.'}</p>`; }
   box.innerHTML=h;
@@ -390,7 +394,7 @@ function actionMenu(){
       if(E.targetsFrom(S,u,u.x,u.y,moved).length) items.push({label:'공격',fn:startTarget});
       if(d.cap && TERRAIN[t.t].prop && t.owner!==1) items.push({label:'점령',note:`남은 ${t.capId===u.id?t.cp:20}`,fn:()=>act('capture')});
       if(d.supply && S.units.some(v=>v.owner===1&&v!==u&&!v.carried&&E.dist(v.x,v.y,u.x,u.y)===1)) items.push({label:'보급',fn:()=>act('supply')});
-      if(d.dive) items.push({label:u.dived?'부상':'잠항',fn:()=>act('dive')});
+      if(d.dive) items.push({label:DIVE_WORD(u.type,!u.dived),fn:()=>act('dive')});
     }
     if(u.cargo.length && u.cargo.some(c=>E.unloadSpots(S,u,c).length)) items.push({label:'하차',fn:startUnload});
     items.push({label:'대기',fn:()=>act('wait')});
@@ -408,7 +412,7 @@ function act(kind,o){
   else if(kind==='load') E.load(S,u,o);
   else if(kind==='capture') E.capture(S,u);
   else if(kind==='supply'){ const n=E.supplyAround(S,u); log(`<b>${UN(u.type)}</b> 이웃 ${n}개 유닛 보급`,1); }
-  else if(kind==='dive'){ u.dived=!u.dived; log(`<b>${UN(u.type)}</b> ${u.dived?'잠항':'부상'}`,1); }
+  else if(kind==='dive'){ u.dived=!u.dived; log(`<b>${UN(u.type)}</b> ${DIVE_WORD(u.type,u.dived)}`,1); }
   if(S.units.includes(u)) u.done=true;
   done();
 }
