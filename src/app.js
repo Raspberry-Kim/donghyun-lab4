@@ -4,6 +4,8 @@ const $=s=>document.querySelector(s), E=window.Engine, AI=window.AI, R=window.Re
 const canvas=$('#board'), g=canvas.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// 컴퓨터 상대의 이름. 글자로 넣는 곳은 AI_T, HTML로 그리는 곳은 AI_H(TM 위첨자)
+const AI_T='동현AI™', AI_H='동현AI<sup class="tm">TM</sup>';
 const MAPNAME=id=>MAPS.find(m=>m.id===id).name;
 const coName=n=>COS[n-1].name;
 const PWNAME=(co,pw)=>!pw||pw===co?`${coName(co)} 그대로`:`${pw} · ${coName(pw)}의 ${COS[pw-1].cop.name}·${COS[pw-1].scop.name}`;
@@ -89,9 +91,9 @@ let cfg={...DEFAULT};
 function parseSortie(out){
   const tok=out.split(/\s+/).filter(Boolean).map(Number), c={...DEFAULT}, err=[];
   let go=false;
-  const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=COS.length,'1~'+COS.length],3:['CPU 지휘관','co2',v=>v>=1&&v<=COS.length,'1~'+COS.length],
+  const rule={1:['지도','map',v=>v>=1&&v<=MAPS.length,'1~'+MAPS.length],2:['나의 지휘관','co1',v=>v>=1&&v<=COS.length,'1~'+COS.length],3:[AI_T+' 지휘관','co2',v=>v>=1&&v<=COS.length,'1~'+COS.length],
     4:['선공','first',v=>v===1||v===2,'1 또는 2'],5:['시작 자금','funds',v=>v>=0&&v<=30000&&v%1000===0,'0~30000, 1000 단위'],7:['난수 시드','seed',v=>v>=1&&v<=2147483646,'1~2147483646'],
-    8:['나의 특수기술','pw1',v=>v>=1&&v<=COS.length,'1~'+COS.length],9:['CPU 특수기술','pw2',v=>v>=1&&v<=COS.length,'1~'+COS.length]};
+    8:['나의 특수기술','pw1',v=>v>=1&&v<=COS.length,'1~'+COS.length],9:[AI_T+' 특수기술','pw2',v=>v>=1&&v<=COS.length,'1~'+COS.length]};
   for(let i=0;i<tok.length;i++){
     const n=tok[i];
     if(go){ err.push(`출전 명령 6 뒤에 ${tok.length-i}개의 정수가 더 나왔다. 6은 마지막에 출력하자.`); break; }
@@ -106,8 +108,8 @@ function parseSortie(out){
   return {c,go,err};
 }
 function sortieCard(c){
-  $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],['CPU',`${c.co2} · ${coName(c.co2)}`],['나의 특수기술',PWNAME(c.co1,c.pw1)],['CPU 특수기술',PWNAME(c.co2,c.pw2)],
-    ['선공',c.first===1?'나':'CPU'],['시작 자금',won(c.funds)],['난이도 · 안개','보통 · 없음']].map(([a,b])=>`<div><span>${a}</span><strong>${b}</strong></div>`).join('');
+  $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],[AI_H,`${c.co2} · ${coName(c.co2)}`],['나의 특수기술',PWNAME(c.co1,c.pw1)],[AI_H+' 특수기술',PWNAME(c.co2,c.pw2)],
+    ['선공',c.first===1?'나':AI_H],['시작 자금',won(c.funds)],['난이도 · 안개','보통 · 없음']].map(([a,b])=>`<div><span>${a}</span><strong>${b}</strong></div>`).join('');
 }
 function result(text,kind){ const r=$('#result'); r.textContent=text; r.dataset.kind=kind||''; }
 function sortie(){
@@ -167,7 +169,7 @@ async function banner(text,sub,cls,ms=950){
 async function beginTurn(){
   busy=true; processEvents(); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
   const p=S.turn; if(p===2) mode='cpu'; hud();
-  await banner(`${S.day}일째 · ${p===1?'나의 차례':'CPU 차례'}`,`${coName(S.players[p].co)} · 자금 ${won(S.players[p].funds)}`,'p'+p);
+  await banner(`${S.day}일째 · ${p===1?'나의 차례':AI_T+' 차례'}`,`${coName(S.players[p].co)} · 자금 ${won(S.players[p].funds)}`,'p'+p);
   busy=false;
   if(finishCheck()) return;
   if(p===2) runCPU(); else { mode='idle'; const r=E.readyUnits(S,1); if(r.length){} hud(); }
@@ -179,7 +181,7 @@ function finishCheck(){
   if(sndOver!==S){ sndOver=S; SND.play(win?'win':'lose'); }
   const card=$('#result-card');
   card.innerHTML=`<div><h3>${win?'승리':'패배'}</h3><p>${S.day}일째 · ${esc(S.reason)}${win?' · 붉은 진영이 이겼다.':' · 푸른 진영이 이겼다.'}</p>
-  <dl><dt></dt><dt>나</dt><dt>CPU</dt><dt>만든 유닛</dt><dd>${P[1].built}</dd><dd>${P[2].built}</dd><dt>무찌른 유닛</dt><dd>${P[1].kills}</dd><dd>${P[2].kills}</dd><dt>잃은 유닛</dt><dd>${P[1].lost}</dd><dd>${P[2].lost}</dd><dt>거점</dt><dd>${E.propsOf(S,1)}</dd><dd>${E.propsOf(S,2)}</dd></dl>
+  <dl><dt></dt><dt>나</dt><dt>${AI_H}</dt><dt>만든 유닛</dt><dd>${P[1].built}</dd><dd>${P[2].built}</dd><dt>무찌른 유닛</dt><dd>${P[1].kills}</dd><dd>${P[2].kills}</dd><dt>잃은 유닛</dt><dd>${P[1].lost}</dd><dd>${P[2].lost}</dd><dt>거점</dt><dd>${E.propsOf(S,1)}</dd><dd>${E.propsOf(S,2)}</dd></dl>
   <button id="again">출전 준비로 <kbd>X</kbd></button></div>`;
   card.hidden=false; $('#again').onclick=backToSetup;
   status(win?'승리':'패배'); log(`${win?'승리':'패배'} · ${S.reason}`,0);
@@ -188,7 +190,7 @@ function finishCheck(){
 
 /* ---------- 기록과 효과 ---------- */
 function log(html,p){ const li=document.createElement('li'); li.className=p?'p'+p:''; li.innerHTML=html; const l=$('#log'); l.prepend(li); while(l.children.length>80) l.lastChild.remove(); }
-const side=p=>p===1?'나':'CPU';
+const side=p=>p===1?'나':AI_T;
 const TN=t=>TERRAIN[t].name;
 function processEvents(){
   if(!S) return; const now=performance.now();
@@ -215,14 +217,14 @@ function stars(P,co){ const max=co.scop.stars, have=P.meter/STAR_VALUE; let h=''
 function hud(){
   if(!S) return;
   $('#co-cards').innerHTML=[1,2].map(p=>{const P=S.players[p], co=COS[P.co-1], pw=E.powOf(S,p), n=S.units.filter(u=>u.owner===p).length;
-    return `<div class="co-card p${p} ${S.turn===p&&!S.winner?'turn':''}"><div class="who"><span>${p===1?'나 · 붉은 진영':'CPU · 푸른 진영'}</span><span>${S.turn===p?'차례':''}</span></div>
+    return `<div class="co-card p${p} ${S.turn===p&&!S.winner?'turn':''}"><div class="who"><span>${p===1?'나 · 붉은 진영':AI_H+' · 푸른 진영'}</span><span>${S.turn===p?'차례':''}</span></div>
     <div class="nm"><span class="co-face">${co.name[0]}</span><div><strong>${co.name}</strong><small>${co.role}${pw!==co?` · 특수기술 ${pw.name}`:''}</small></div></div>
     <dl><dt>자금</dt><dd>${won(P.funds)}</dd><dt>거점</dt><dd>${E.propsOf(S,p)}</dd><dt>유닛</dt><dd>${n}</dd></dl>
     <div class="stars" aria-label="지휘관 능력 별 ${Math.floor(P.meter/STAR_VALUE)}개">${stars(P,pw)}</div>
     ${P.power?`<span class="power-tag">${P.power===2?pw.scop.name:pw.cop.name} 사용 중</span>`:''}</div>`;}).join('');
   $('#day').textContent=`${S.day}일째`;
-  const tb=$('#turn-badge'); tb.textContent=S.turn===1?'나의 차례':'CPU 차례'; tb.className='p'+S.turn;
-  if(!S.winner) status(mode==='cpu'||S.turn===2?'CPU가 생각하는 중':'나의 차례 · '+({idle:'유닛을 고르자',move:'갈 곳을 고르자',action:'명령을 고르자',target:'공격 대상을 고르자',unload:'내릴 곳을 고르자',menu:'메뉴',build:'생산',info:'정보'}[mode]||''));
+  const tb=$('#turn-badge'); tb.textContent=S.turn===1?'나의 차례':AI_T+' 차례'; tb.className='p'+S.turn;
+  if(!S.winner) status(mode==='cpu'||S.turn===2?AI_T+'가 생각하는 중':'나의 차례 · '+({idle:'유닛을 고르자',move:'갈 곳을 고르자',action:'명령을 고르자',target:'공격 대상을 고르자',unload:'내릴 곳을 고르자',menu:'메뉴',build:'생산',info:'정보'}[mode]||''));
   infoCard();
 }
 function infoCard(){
@@ -459,14 +461,14 @@ function showInfo(){
     ...(bs.length?bs.slice(0,6).map(([t,v])=>({label:'기본 피해 → '+UN(t),note:v+'%'})):[{label:'공격할 수 없다'}])],()=>{mode='idle';info=null;});
 }
 
-/* ---------- CPU 차례 ---------- */
+/* ---------- 동현AI 차례 ---------- */
 async function runCPU(){
   mode='cpu'; hud(); let guard=0;
   const wait=ms=>sleep(fast?ms/5:ms);
   while(S && !S.winner && S.turn===2 && guard++<400){
     const a=AI.next(S);
     if(a.k==='end'){ AI.apply(S,a); break; }
-    if(a.k==='power'){ AI.apply(S,a); const co=E.powOf(S,2), p=a.level===2?co.scop:co.cop; processEvents(); hud(); await banner(`CPU ${coName(S.players[2].co)} · ${p.name}`,p.text,'power',1000); continue; }
+    if(a.k==='power'){ AI.apply(S,a); const co=E.powOf(S,2), p=a.level===2?co.scop:co.cop; processEvents(); hud(); await banner(`${AI_T} ${coName(S.players[2].co)} · ${p.name}`,p.text,'power',1000); continue; }
     if(a.k==='build'){ ui.cursor=[a.x,a.y]; hud(); await wait(220); AI.apply(S,a); processEvents(); hud(); await wait(160); continue; }
     if(a.k==='move'){
       const u=S.units.find(v=>v.id===a.id); ui.cursor=[u.x,u.y]; hud(); await wait(240);

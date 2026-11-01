@@ -39,7 +39,7 @@ const {chromium}=require('playwright');
   await p.keyboard.press('Enter'); await pick('무쇠 폭풍'); await p.waitForTimeout(1400);
   console.log('power',await p.evaluate(()=>__dongHyunJeon.state.players[1].power));
   await p.screenshot({path:__dirname+'/shot-power.png'});
-  // 턴 종료 확인 → CPU → 다시 내 차례
+  // 턴 종료 확인 → 동현AI → 다시 내 차례
   await p.keyboard.press('Enter'); await pick('턴 종료'); const m=await st(); console.log('confirm',m.menu); if(m.menu) await pick('턴을 끝낸다');
   for(let i=0;i<60;i++){await p.waitForTimeout(400); const s=await st(); if(s.turn===1&&s.mode==='idle') break;}
   console.log('back',JSON.stringify((await st()).day));
