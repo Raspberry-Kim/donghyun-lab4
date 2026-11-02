@@ -109,7 +109,12 @@ function parseSortie(out){
 }
 function sortieCard(c){
   $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],[AI_H,`${c.co2} · ${coName(c.co2)}`],['나의 특수기술',PWNAME(c.co1,c.pw1)],[AI_H+' 특수기술',PWNAME(c.co2,c.pw2)],
-    ['선공',c.first===1?'나':AI_H],['시작 자금',won(c.funds)],['난이도 · 안개','보통 · 없음']].map(([a,b])=>`<div><span>${a}</span><strong>${b}</strong></div>`).join('');
+    ['선공',c.first===1?'나':AI_H],['시작 자금',`${won(c.funds)} · 첫날 수입 +${won(firstIncome(c))}`],
+    ['난이도 · 안개','보통 · 없음','only-m'],['난이도','보통','only-d'],['안개','없음','only-d']] // 휴대폰(2칸 줄)은 한 칸으로, 데스크톱(3칸 줄)은 두 칸으로 나눠 3×3을 채운다
+    .map(([a,b,k])=>`<div${k?` class="${k}"`:''}><span>${a}</span><strong>${b}</strong></div>`).join('');
+}
+// 첫날 수입: 시작 자금과 별도로 첫날 차례가 시작될 때 가진 시설 수만큼 받는다(원작과 같다)
+function firstIncome(c){ try{ const s=E.newGame({map:c.map,co1:c.co1,co2:c.co2,pw1:c.pw1,pw2:c.pw2,first:c.first,funds:0,seed:1}); return E.incomeOf(s,1); }catch(e){ return 0; }
 }
 function result(text,kind){ const r=$('#result'); r.textContent=text; r.dataset.kind=kind||''; }
 function sortie(){

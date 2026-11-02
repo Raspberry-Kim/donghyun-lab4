@@ -154,7 +154,7 @@ a.series-item:hover{background:#fff0c6;border-color:#b99542;transform:translateY
 .dh-status{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:0;padding:8px 16px;border-top:1px solid var(--line);font-size:var(--text-xs);color:var(--muted)}
 #example-note{font-size:var(--text-xs);line-height:1.75;color:var(--muted);margin:12px 0 10px;min-height:21px;word-break:keep-all}
 .sortie-card{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.sortie-card>div{background:var(--paper);padding:8px 10px;min-width:0}
+.sortie-card>div{background:var(--paper);padding:8px 10px;min-width:0}.sortie-card .only-m{display:none}
 .sortie-card span{display:block;font:var(--text-xs) var(--mono);color:var(--muted)}
 .sortie-card strong{display:block;font-size:var(--text-sm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #result{font-size:var(--text-xs);line-height:1.8;color:var(--muted);min-height:42px;margin-top:10px;overflow-wrap:anywhere}
@@ -243,7 +243,7 @@ footer a{color:var(--muted)}
   .board-bottom #hint{display:none}
 }
 @media(max-width:480px){main{padding:0 16px}.header{padding:0 16px}#code,#lines{font-size:13.5px}.dh-head{padding:10px 12px}.dh-head select{flex:1 1 100%}.dh-btn kbd{display:none}
-  .co-cards{grid-template-columns:1fr 1fr;gap:6px}.co-card{padding:8px}.co-face{width:28px;height:28px;font-size:15px}.sortie-card{grid-template-columns:1fr 1fr}
+  .co-cards{grid-template-columns:1fr 1fr;gap:6px}.co-card{padding:8px}.co-face{width:28px;height:28px;font-size:15px}.sortie-card{grid-template-columns:1fr 1fr}.sortie-card .only-m{display:block}.sortie-card .only-d{display:none}
   .dpad{grid-template-columns:repeat(3,44px)}.pad-keys{grid-template-columns:repeat(3,48px)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
@@ -339,7 +339,7 @@ sup.tm{font-size:.55em;line-height:0;vertical-align:super;margin-left:.08em;lett
       <tr><td>2</td><td>나의 지휘관</td><td>붉은별 1 뭉치 · 2 뚱띠 · 3 또치 · 4 포동이 · 5 뿡뿡 · 푸른달 6 꽥꽥 · 7 지슝 · 8 쏜쏜 · 9 효르</td><td>1</td></tr>
       <tr><td>3</td><td>동현AI<sup class="tm">TM</sup> 지휘관</td><td>1~9 (같은 지휘관끼리도 된다)</td><td>1</td></tr>
       <tr><td>4</td><td>선공</td><td>1 내가 먼저 · 2 동현AI<sup class="tm">TM</sup>가 먼저</td><td>1</td></tr>
-      <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액</td><td>0</td></tr>
+      <tr><td>5</td><td>시작 자금</td><td>0~30000 · 1000 단위 · 양쪽 같은 금액 · 첫날 수입(시설 수 × 1,000)은 따로 받는다</td><td>0</td></tr>
       <tr><td>7</td><td>난수 시드</td><td>1~2147483646 · 같은 시드는 같은 운</td><td>매번 새로</td></tr>
       <tr><td>8</td><td>나의 특수기술</td><td>1~9 · 작은 능력·큰 능력을 그 번호 지휘관의 것으로 바꾼다. 평소 능력은 나의 지휘관 그대로</td><td>나의 지휘관 것</td></tr>
       <tr><td>9</td><td>동현AI<sup class="tm">TM</sup> 특수기술</td><td>1~9 · 명령 8과 같다</td><td>동현AI<sup class="tm">TM</sup> 지휘관 것</td></tr>
@@ -2532,7 +2532,12 @@ function parseSortie(out){
 }
 function sortieCard(c){
   $('#sortie-card').innerHTML=[['지도',`${c.map} · ${MAPNAME(c.map)}`],['나의 지휘관',`${c.co1} · ${coName(c.co1)}`],[AI_H,`${c.co2} · ${coName(c.co2)}`],['나의 특수기술',PWNAME(c.co1,c.pw1)],[AI_H+' 특수기술',PWNAME(c.co2,c.pw2)],
-    ['선공',c.first===1?'나':AI_H],['시작 자금',won(c.funds)],['난이도 · 안개','보통 · 없음']].map(([a,b])=>`<div><span>${a}</span><strong>${b}</strong></div>`).join('');
+    ['선공',c.first===1?'나':AI_H],['시작 자금',`${won(c.funds)} · 첫날 수입 +${won(firstIncome(c))}`],
+    ['난이도 · 안개','보통 · 없음','only-m'],['난이도','보통','only-d'],['안개','없음','only-d']] // 휴대폰(2칸 줄)은 한 칸으로, 데스크톱(3칸 줄)은 두 칸으로 나눠 3×3을 채운다
+    .map(([a,b,k])=>`<div${k?` class="${k}"`:''}><span>${a}</span><strong>${b}</strong></div>`).join('');
+}
+// 첫날 수입: 시작 자금과 별도로 첫날 차례가 시작될 때 가진 시설 수만큼 받는다(원작과 같다)
+function firstIncome(c){ try{ const s=E.newGame({map:c.map,co1:c.co1,co2:c.co2,pw1:c.pw1,pw2:c.pw2,first:c.first,funds:0,seed:1}); return E.incomeOf(s,1); }catch(e){ return 0; }
 }
 function result(text,kind){ const r=$('#result'); r.textContent=text; r.dataset.kind=kind||''; }
 function sortie(){
