@@ -1,5 +1,6 @@
 /* 동현전 화면: 동현랭 출전 → 키보드 전투 → 결과 → 다시 출전 준비 */
 (function(){
+const HINT0='<span><kbd>X</kbd>확인</span><span><kbd>Z</kbd>취소</span><span><kbd>↵</kbd>메뉴</span>'; // 전장 아래 조작 안내
 const $=s=>document.querySelector(s), E=window.Engine, AI=window.AI, R=window.Render;
 const canvas=$('#board'), g=canvas.getContext('2d');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -164,7 +165,7 @@ function findHQ(p){ for(let y=0;y<S.map.H;y++) for(let x=0;x<S.map.W;x++){ const
 function backToSetup(){
   S=null; mode='setup'; closeMenu(); $('#result-card').hidden=true; $('#banner').hidden=true;
   $('#setup-panel').hidden=false; $('#hud').hidden=true; $('#board-wrap').classList.remove('live'); $('#touchpad').classList.remove('on');
-  preview(cfg); renderSlotList(); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
+  preview(cfg); renderSlotList(); status('출전 준비'); result('다시 출전하려면 코드를 고치거나 그대로 출전을 누르자.'); $('#hint').innerHTML=HINT0;
 }
 $('#concede').onclick=()=>{ if(!S||S.winner||mode==='cpu') return; confirmMenu('항복하고 출전 준비로 돌아갈까?',[['항복한다',()=>{E.concede(S,1);finishCheck();}],['계속 싸운다',()=>{}]]); };
 async function banner(text,sub,cls,ms=950){
@@ -172,7 +173,7 @@ async function banner(text,sub,cls,ms=950){
   await sleep(reduced||fast?Math.min(ms,350):ms); b.hidden=true;
 }
 async function beginTurn(){
-  busy=true; processEvents(); $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴';
+  busy=true; processEvents(); $('#hint').innerHTML=HINT0;
   const p=S.turn; if(p===2) mode='cpu'; hud();
   await banner(`${S.day}일째 · ${p===1?'나의 차례':AI_T+' 차례'}`,`${coName(S.players[p].co)} · 자금 ${won(S.players[p].funds)}`,'p'+p);
   busy=false;
@@ -305,7 +306,7 @@ function restore(data){
   const l=$('#log'); l.innerHTML=''; for(const e of (data.logs||[]).slice(-79)){ const li=document.createElement('li'); li.className=String(e.c||'').replace(/[^a-z0-9 ]/gi,''); li.innerHTML=String(e.h||''); l.prepend(li); }
   log(`${S.day}일째 판을 불러왔다.`,0);
   fit(); $('#board-wrap').focus({preventScroll:true});
-  busy=false; fast=false; mode='idle'; $('#hint').textContent='X 확인 · Z 취소 · Enter 메뉴'; hud();
+  busy=false; fast=false; mode='idle'; $('#hint').innerHTML=HINT0; hud();
   if(S.turn===2) runCPU();
 }
 function readSlot(n){ try{ const t=localStorage.getItem(SLOT_KEY(n)); return t?JSON.parse(t):null; }catch(e){ return null; } }
@@ -434,7 +435,7 @@ function act(kind,o){
   if(S.units.includes(u)) u.done=true;
   done();
 }
-function done(){ processEvents(); const last=sel; clearSel(); mode='idle'; if(finishCheck()) return; hud(); if(!E.readyUnits(S,1).length) $('#hint').textContent='모든 유닛이 움직였다 · Enter로 턴 종료'; }
+function done(){ processEvents(); const last=sel; clearSel(); mode='idle'; if(finishCheck()) return; hud(); if(!E.readyUnits(S,1).length) $('#hint').innerHTML='<span>모든 유닛이 움직였다</span><span><kbd>↵</kbd>턴 종료</span>'; }
 function startTarget(){
   closeMenu(); const moved=sel.x!==orig.x||sel.y!==orig.y;
   const list=E.targetsFrom(S,sel,sel.x,sel.y,moved); tgt={list,i:0}; mode='target';
