@@ -410,23 +410,27 @@ const TC0={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tr
   road:'#d3c7a6',road2:'#a39578',road3:'#e3d9bc',plank:'#b8854f',plank2:'#7d5530',plank3:'#d9a66a',foam:'#e8f4ff',deep:'#4384d0',bank:'#6f9c3e',river:'#5aa0e6',river2:'#3f86d2',
   fl:['#fff7e0','#ffd34d','#ffb3c7'],flRate:3,treeTop:null,sparkle:'rgba(235,246,255,.85)'};
 const THEMES={
-  // 눈: 흰 땅, 눈 얹은 나무, 얼음빛 물, 눈 쌓인 길
-  snow:{grass:'#eef2f6',grassB:'#e7edf3',grass2:'#d3dee8',grass3:'#ffffff',tree:'#5d8c78',tree2:'#3f6a58',trunk:'#5a4634',treeTop:'#f7fbff',
-    rock:'#9aa7b5',rock2:'#6b7889',water:'#a4cde8',water2:'#86b6da',wave:'#eaf6fd',deep:'#97c3e3',foam:'#ffffff',sand:'#e9e6dd',sand2:'#cfcbc0',bank:'#c9d6e2',
-    river:'#a9d0ea',river2:'#86b6da',road:'#d8dde1',road2:'#a6adb4',road3:'#eef1f3',plank:'#a98a68',plank2:'#755a40',plank3:'#cdb08a',fl:['#ffffff','#dbe8f2','#c7d9e8'],flRate:2},
-  // 밤: 어두운 들과 검은 물. 건물·유닛은 그대로 밝아 불 켠 듯 보인다
-  night:{grass:'#4f7a46',grassB:'#54804b',grass2:'#3f663a',grass3:'#618f57',tree:'#2a5a2e',tree2:'#1c4020',trunk:'#3f2c1c',
-    rock:'#6f6252',rock2:'#4a4035',water:'#28467a',water2:'#213c6b',wave:'#5c7fb5',deep:'#264374',foam:'#9fb6d6',sand:'#a8a07c',sand2:'#8c8464',bank:'#3d6038',
-    river:'#2d5088',river2:'#223f70',road:'#9f9880',road2:'#746d5a',road3:'#aea78f',fl:['#c9c9a8','#b9a85a','#b0869a'],flRate:5,sparkle:'rgba(200,220,255,.7)'},
-  // 푸른 달: 달빛에 식은 풀과 짙은 쪽빛 바다
-  bluemoon:{grass:'#5f9a86',grassB:'#66a08c',grass2:'#4d8470',grass3:'#7cb49e',tree:'#2f6e5a',tree2:'#1f4e40',trunk:'#4a3a2a',
-    rock:'#7f8a8e',rock2:'#55606a',water:'#2d5cc0',water2:'#2449a6',wave:'#a7c0ff',deep:'#2a56b8',foam:'#dfe8ff',sand:'#cfd0bd',sand2:'#aeb09c',bank:'#4a7a6a',
-    river:'#3366c8',river2:'#2449a6',road:'#b7b8a8',road2:'#878877',road3:'#cacbbd',fl:['#eef4ff','#b9d0ff','#d3c0ff'],flRate:4,sparkle:'rgba(220,235,255,.95)'},
-  // 달빛 항구: 은빛 달 아래 잿빛 풀과 남빛 바다
-  moonlight:{grass:'#7a9c80',grassB:'#819f86',grass2:'#688a6e',grass3:'#95b39a',tree:'#3e6e52',tree2:'#2b4f3a',trunk:'#4f3f30',
-    rock:'#8a8c86',rock2:'#5f625c',water:'#3f66a8',water2:'#345590',wave:'#b9cbee',deep:'#3b609f',foam:'#e8eefb',sand:'#d8d5c6',sand2:'#b8b5a6',bank:'#5f7e66',
-    road:'#c2bfb0',road2:'#8f8c7e',road3:'#d5d2c5',river:'#4a72b8',river2:'#345590',fl:['#f4f6ff','#d6dcf0','#c8d4ea'],flRate:4,sparkle:'rgba(240,245,255,.95)'},
-  // 들꽃: 봄빛 풀밭과 평지마다 피는 네 색 들꽃
+  // 눈 덮인 고원: 포근한 흰 눈, 눈 얹은 나무, 잿빛 바위
+  snow:{grass:'#f2f3ef',grassB:'#ecedea',grass2:'#d9dcd8',grass3:'#ffffff',tree:'#5d8c78',tree2:'#3f6a58',trunk:'#5a4634',treeTop:'#f7fbff',
+    rock:'#9aa3ad',rock2:'#6b7480',water:'#a4cde8',water2:'#86b6da',wave:'#eaf6fd',deep:'#97c3e3',foam:'#ffffff',sand:'#e9e6dd',sand2:'#cfcbc0',bank:'#c9d6e2',
+    river:'#a9d0ea',river2:'#86b6da',road:'#d8dde1',road2:'#a6adb4',road3:'#eef1f3',plank:'#a98a68',plank2:'#755a40',plank3:'#cdb08a',fl:['#ffffff','#e6e9ec','#d4d9de'],flRate:2},
+  // 얼음 들판: 푸른 기가 도는 언 땅, 서리 낀 나무, 얼어붙은 물
+  ice:{grass:'#dfeaf3',grassB:'#d7e4ef',grass2:'#bfd3e3',grass3:'#f6fbff',tree:'#4f8a86',tree2:'#356a66',trunk:'#4e4a3e',treeTop:'#eef8ff',
+    rock:'#8c9db0',rock2:'#5e6f84',water:'#b9dcef',water2:'#9cc8e4',wave:'#ffffff',deep:'#add4ec',foam:'#ffffff',sand:'#dfe3e4',sand2:'#c3cacd',bank:'#b5cadb',
+    river:'#bcdcee',river2:'#9cc8e4',road:'#ccd6dd',road2:'#9aa8b3',road3:'#e4ebf0',plank:'#a08466',plank2:'#6e553d',plank3:'#c6a986',fl:['#ffffff','#cfe4f3','#b6d4ea'],flRate:2,sparkle:'rgba(255,255,255,.95)'},
+  // 검은 하늘: 어두운 들과 검은 물. 건물·유닛은 그대로 밝아 불 켠 듯 보인다
+  night:{grass:'#46693f',grassB:'#4b6f44',grass2:'#385634',grass3:'#587e4f',tree:'#254f2a',tree2:'#18371c',trunk:'#3a281a',
+    rock:'#625648',rock2:'#41382e',water:'#1c3152',water2:'#162844',wave:'#4a6a95',deep:'#1a2e4e',foam:'#8ea4c4',sand:'#9a9270',sand2:'#7e7659',bank:'#34522f',
+    river:'#1f3a60',river2:'#162c4c',road:'#948d76',road2:'#6b6452',road3:'#a39c85',fl:['#b9b99a','#a89850','#a07a8c'],flRate:5,sparkle:'rgba(190,210,250,.6)'},
+  // 푸른 달: 달빛에 식은 풀과 깊은 쪽빛 바다
+  bluemoon:{grass:'#58907e',grassB:'#5e9684',grass2:'#477a68',grass3:'#74aa95',tree:'#2b6652',tree2:'#1c473a',trunk:'#463827',
+    rock:'#75828a',rock2:'#4d5862',water:'#1f45a0',water2:'#19378a',wave:'#8fb0ff',deep:'#1d4098',foam:'#cfdcff',sand:'#c6c8b6',sand2:'#a6a894',bank:'#437064',
+    river:'#244fb0',river2:'#19378a',road:'#aeb0a1',road2:'#808273',road3:'#c1c3b6',fl:['#eef4ff','#b9d0ff','#d3c0ff'],flRate:4,sparkle:'rgba(215,230,255,.95)'},
+  // 달빛 항구: 은빛 달 아래 잿빛 풀과 짙은 남빛 바다
+  moonlight:{grass:'#73937a',grassB:'#7a9980',grass2:'#618368',grass3:'#8ead94',tree:'#38664c',tree2:'#264836',trunk:'#4a3b2d',
+    rock:'#83857f',rock2:'#595c56',water:'#2c4c86',water2:'#243f72',wave:'#a7bce6',deep:'#29477f',foam:'#dbe4f7',sand:'#d1cfc0',sand2:'#b1afa0',bank:'#587660',
+    road:'#bbb8a9',road2:'#898678',road3:'#cecbbe',river:'#355a98',river2:'#243f72',fl:['#f4f6ff','#d6dcf0','#c8d4ea'],flRate:4,sparkle:'rgba(240,245,255,.95)'},
+  // 들꽃: 봄빛 풀밭과 평지마다 피는 여러 색 들꽃
   meadow:{grass:'#9ad364',grassB:'#a2d96c',grass2:'#84bf52',grass3:'#b7e283',fl:['#fff7e0','#ffd34d','#ff9fc0','#c79bff','#ffffff','#ff8a65'],flRate:1}
 };
 let TC=TC0;
