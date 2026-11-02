@@ -222,14 +222,20 @@ const MAP_SRC = [
     '^.m..^^=^^..f.^^',
     '^..c.^^=^^.c...^',
     '^^..f..===..f.^^']},
-  {id:11, name:'두 섬 다리', note:'20×14 · 두 섬과 가운데 두 다리 · 해협 항구', half:[
+  {id:11, name:'두 섬 다리', note:'20×13 · 두 섬과 가운데 두 다리 · 해협 항구', full:[
     '~~~~~~~~~~~~~~~~~~~~',
     '~^f.c...~~~~.f.cDI^~',
     '~f.m..c.~~~~p..N.f.~',
     '~.c.f..=~~~~=.c..E.~',
     '~_..c..=~~~~=..f.c.~',
     '~.f.c..=####=.c...R~',
-    '~..c.f.=~~*~=.f.c..~']},
+    '~..c.f.=~**~=.f.c..~',
+    '~P...c.=####=..c.f.~',
+    '~.c.f..=~~~~=..c.._~',
+    '~.A..c.=~~~~=..f.c.~',
+    '~.f.M..p~~~~.c..m.f~',
+    '~^HCc.f.~~~~...c.f^~',
+    '~~~~~~~~~~~~~~~~~~~~']},
   {id:12, name:'강 삼각주', note:'20×12 · 갈라지는 강과 가운데 섬 · 다리 여섯', half:[
     '^f..c....rr.f...cDI^',
     'f..m....=##====.N..f',
@@ -364,12 +370,13 @@ const CELL = {
   'a':['airport',0],'A':['airport',1],'E':['airport',2],'p':['port',0],'P':['port',1],'R':['port',2],
   'H':['hq',1],'I':['hq',2]
 };
+/* half: 위 절반만 적고 아래 절반은 180° 돌려 채운다(진영 바꿈). full: 홀수 줄 지도처럼 전체를 그대로 적는다. */
 function buildMap(src){
-  const top=src.half, W=top[0].length, Hh=top.length, H=Hh*2;
+  const top=src.half||src.full, W=top[0].length, Hh=top.length, H=src.full?Hh:Hh*2;
   const grid=[];
   for(let y=0;y<H;y++){const row=[];for(let x=0;x<W;x++){
     let ch, swap=false;
-    if(y<Hh) ch=top[y][x]; else {ch=top[H-1-y][W-1-x]; swap=true;}
+    if(src.full||y<Hh) ch=top[y][x]; else {ch=top[H-1-y][W-1-x]; swap=true;}
     const c=CELL[ch]; if(!c) throw Error('지도 문자 오류: '+ch);
     let owner=c[1]; if(swap&&owner) owner=3-owner;
     row.push({t:c[0], owner});
