@@ -15,7 +15,7 @@ function newGame(opts){
   const m = MAPS.find(m=>m.id===opts.map) || MAPS[0];
   const grid = m.grid.map(r=>r.map(c=>({t:c.t, owner:c.owner, cp:20, capId:0})));
   const state = {
-    map:{id:m.id,name:m.name,W:m.W,H:m.H,grid},
+    map:{id:m.id,name:m.name,theme:m.theme,W:m.W,H:m.H,grid},
     units:[], nextId:1, day:1, turn:opts.first||1, first:opts.first||1, winner:0, reason:'',
     seed: opts.seed || (Math.floor(Math.random()*2147483646)+1),
     players:[null,

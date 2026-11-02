@@ -404,9 +404,33 @@ function grayify(hex){
 function hash(x,y,s=0){ let h=(x*374761393+y*668265263+s*982451653)>>>0; h=(h^(h>>>13))*1274126177>>>0; return (h^(h>>>16))>>>0; }
 
 /* ---- 지형 ---- */
-const TC={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
+/* 기본 색. 지도마다 색조(theme)를 덧입힌다: 원작의 날씨 화면처럼 타일 모양은 두고 색만 바꾼다. */
+const TC0={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
   rock:'#a08467',rock2:'#7a604a',snow:'#f4efe4',water:'#4c8fd9',water2:'#3b78c4',wave:'#9cc6f2',sand:'#e9d79a',sand2:'#cdb876',
-  road:'#d3c7a6',road2:'#a39578',road3:'#e3d9bc',plank:'#b8854f',plank2:'#7d5530',plank3:'#d9a66a',foam:'#e8f4ff',deep:'#4384d0',bank:'#6f9c3e',river:'#5aa0e6',river2:'#3f86d2'};
+  road:'#d3c7a6',road2:'#a39578',road3:'#e3d9bc',plank:'#b8854f',plank2:'#7d5530',plank3:'#d9a66a',foam:'#e8f4ff',deep:'#4384d0',bank:'#6f9c3e',river:'#5aa0e6',river2:'#3f86d2',
+  fl:['#fff7e0','#ffd34d','#ffb3c7'],flRate:3,treeTop:null,sparkle:'rgba(235,246,255,.85)'};
+const THEMES={
+  // 눈: 흰 땅, 눈 얹은 나무, 얼음빛 물, 눈 쌓인 길
+  snow:{grass:'#eef2f6',grassB:'#e7edf3',grass2:'#d3dee8',grass3:'#ffffff',tree:'#5d8c78',tree2:'#3f6a58',trunk:'#5a4634',treeTop:'#f7fbff',
+    rock:'#9aa7b5',rock2:'#6b7889',water:'#a4cde8',water2:'#86b6da',wave:'#eaf6fd',deep:'#97c3e3',foam:'#ffffff',sand:'#e9e6dd',sand2:'#cfcbc0',bank:'#c9d6e2',
+    river:'#a9d0ea',river2:'#86b6da',road:'#d8dde1',road2:'#a6adb4',road3:'#eef1f3',plank:'#a98a68',plank2:'#755a40',plank3:'#cdb08a',fl:['#ffffff','#dbe8f2','#c7d9e8'],flRate:2},
+  // 밤: 어두운 들과 검은 물. 건물·유닛은 그대로 밝아 불 켠 듯 보인다
+  night:{grass:'#4f7a46',grassB:'#54804b',grass2:'#3f663a',grass3:'#618f57',tree:'#2a5a2e',tree2:'#1c4020',trunk:'#3f2c1c',
+    rock:'#6f6252',rock2:'#4a4035',water:'#28467a',water2:'#213c6b',wave:'#5c7fb5',deep:'#264374',foam:'#9fb6d6',sand:'#a8a07c',sand2:'#8c8464',bank:'#3d6038',
+    river:'#2d5088',river2:'#223f70',road:'#9f9880',road2:'#746d5a',road3:'#aea78f',fl:['#c9c9a8','#b9a85a','#b0869a'],flRate:5,sparkle:'rgba(200,220,255,.7)'},
+  // 푸른 달: 달빛에 식은 풀과 짙은 쪽빛 바다
+  bluemoon:{grass:'#5f9a86',grassB:'#66a08c',grass2:'#4d8470',grass3:'#7cb49e',tree:'#2f6e5a',tree2:'#1f4e40',trunk:'#4a3a2a',
+    rock:'#7f8a8e',rock2:'#55606a',water:'#2d5cc0',water2:'#2449a6',wave:'#a7c0ff',deep:'#2a56b8',foam:'#dfe8ff',sand:'#cfd0bd',sand2:'#aeb09c',bank:'#4a7a6a',
+    river:'#3366c8',river2:'#2449a6',road:'#b7b8a8',road2:'#878877',road3:'#cacbbd',fl:['#eef4ff','#b9d0ff','#d3c0ff'],flRate:4,sparkle:'rgba(220,235,255,.95)'},
+  // 달빛 항구: 은빛 달 아래 잿빛 풀과 남빛 바다
+  moonlight:{grass:'#7a9c80',grassB:'#819f86',grass2:'#688a6e',grass3:'#95b39a',tree:'#3e6e52',tree2:'#2b4f3a',trunk:'#4f3f30',
+    rock:'#8a8c86',rock2:'#5f625c',water:'#3f66a8',water2:'#345590',wave:'#b9cbee',deep:'#3b609f',foam:'#e8eefb',sand:'#d8d5c6',sand2:'#b8b5a6',bank:'#5f7e66',
+    road:'#c2bfb0',road2:'#8f8c7e',road3:'#d5d2c5',river:'#4a72b8',river2:'#345590',fl:['#f4f6ff','#d6dcf0','#c8d4ea'],flRate:4,sparkle:'rgba(240,245,255,.95)'},
+  // 들꽃: 봄빛 풀밭과 평지마다 피는 네 색 들꽃
+  meadow:{grass:'#9ad364',grassB:'#a2d96c',grass2:'#84bf52',grass3:'#b7e283',fl:['#fff7e0','#ffd34d','#ff9fc0','#c79bff','#ffffff','#ff8a65'],flRate:1}
+};
+let TC=TC0;
+function setTheme(name){ TC=name&&THEMES[name]?Object.assign({},TC0,THEMES[name]):TC0; }
 const isWater=t=>t==='sea'||t==='reef'||t==='river'||t==='shoal'||t==='bridge';
 const seaLike=t=>t==='sea'||t==='reef';
 function drawTerrain(g,map,x,y){
@@ -425,7 +449,8 @@ function drawTerrain(g,map,x,y){
     if(!U&&!Rt&&land(1,-1)){ R(T-2,0,2,2,TC.sand); R(T-3,0,1,2,TC.foam); R(T-3,2,3,1,TC.foam); }
     if(!Dn&&!L&&land(-1,1)){ R(0,T-2,2,2,TC.sand); R(2,T-2,1,2,TC.foam); R(0,T-3,3,1,TC.foam); }
     if(!Dn&&!Rt&&land(1,1)){ R(T-2,T-2,2,2,TC.sand); R(T-3,T-2,1,2,TC.foam); R(T-3,T-3,3,1,TC.foam); } };
-  if(t==='plain'){ grass(); const h=hash(x,y,11); if(h%3===0){ const fx=2+h%11, fy=3+(h>>>5)%10; R(fx,fy,1,1,'#fff7e0'); R(fx+1,fy+1,1,1,(h>>>9)%2?'#ffd34d':'#ffb3c7'); } }
+  if(t==='plain'){ grass(); const h=hash(x,y,11), F=TC.fl; if(h%TC.flRate===0){ const fx=2+h%11, fy=3+(h>>>5)%10; R(fx,fy,1,1,F[0]); R(fx+1,fy+1,1,1,F[1+(h>>>9)%(F.length-1)]); }
+    if(TC.flRate===1&&h%2){ const fx=1+(h>>>13)%12, fy=1+(h>>>17)%12; R(fx,fy,1,1,F[1+(h>>>21)%(F.length-1)]); R(fx+1,fy,1,1,F[0]); } }
   else if(t==='forest'){ grass(); const pp=propPal(0); R(1,13,14,2,'rgba(20,30,10,.22)'); for(const [a,b] of [[5,-3],[1,3],[8,4]]) stamp(g,PROP.tree,X+a,Y+b,pp); }
   else if(t==='mountain'){ grass(); stamp(g,PROP.mountain,X,Y-4,propPal(0)); }
   else if(t==='road'||t==='bridge'||t==='river'){
@@ -509,7 +534,7 @@ function stamp(g,rows,X,Y,pal){
     for(let i=0;i<r.length;i++){ const ch=r[i]; if(ch==='.') continue; const c=pal[ch]||C[ch]; if(!c) continue; g.fillStyle=c; g.fillRect(X+i,Y+y,1,1); } }
 }
 function propPal(owner){ const P=PAL[owner||0]; return {m:P.m,d:P.d,l:P.l,S:'rgba(20,30,10,.28)',y:owner?C.y:P.l,
-  r:TC.rock,R:TC.rock2,a:TC.grass3,b:TC.tree,c:TC.tree2,t:TC.trunk}; }
+  r:TC.rock,R:TC.rock2,a:TC.treeTop||TC.grass3,b:TC.tree,c:TC.tree2,t:TC.trunk}; }
 function drawProperty(g,cell,X,Y,at){
   const t=cell.t, pal=propPal(cell.owner);
   const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(X+a,Y+b,w,h); };
@@ -518,7 +543,9 @@ function drawProperty(g,cell,X,Y,at){
   if(t==='airport'){ R(0,11,T,5,TC.road2); R(0,11,T,1,TC.sand2); for(let i=1;i<T;i+=5) R(i,13,3,1,C.w); stamp(g,PROP.airport,X,Y-4,pal); return; }
   stamp(g,PROP[t],X,Y-4,pal);
 }
+function themeOf(map){ if(map.theme!==undefined) return map.theme; const D=root.DH_DATA; const m=D&&D.MAPS.find(m=>m.id===map.id); return m&&m.theme; }
 function terrainLayer(map){
+  setTheme(themeOf(map));
   const c=mk(map.W*T,map.H*T+PAD), g=c.getContext('2d'); g.translate(0,PAD);
   for(let y=0;y<map.H;y++) for(let x=0;x<map.W;x++) drawTerrain(g,map,x,y);
   return c;
@@ -531,11 +558,12 @@ function digit(g,n,x,y,col){ const s=String(n); let ox=x;
 function draw(g, s, ui, now){
   const map=s.map;
   if(!ui.terrain || ui.terrainKey!==ui.terrainVer){ ui.terrain=terrainLayer(map); ui.terrainKey=ui.terrainVer; }
+  setTheme(themeOf(map));
   g.imageSmoothingEnabled=false;
   g.drawImage(ui.terrain,0,0); g.save(); g.translate(0,PAD);
   // 물결 반짝임(지형층 위에 가볍게)
   if(ui.seaKey!==ui.terrainKey){ ui.seaTiles=[]; for(let y=0;y<map.H;y++) for(let x=0;x<map.W;x++){ const t=map.grid[y][x].t; if(t==='sea'||t==='river') ui.seaTiles.push([x,y,t]); } ui.seaKey=ui.terrainKey; }
-  { const ph=Math.floor(now/650); g.fillStyle='rgba(235,246,255,.85)';
+  { const ph=Math.floor(now/650); g.fillStyle=TC.sparkle;
     for(const [x,y,t] of ui.seaTiles){ const h=hash(x,y,ph&7); if(h%4) continue; const k=t==='river'?6:10; g.fillRect(x*T+3+(h>>>3)%k,y*T+3+(h>>>7)%k,2,1); } }
   // 이동 · 공격 범위
   if(ui.moveSet){ g.fillStyle='rgba(120,190,255,.48)'; for(const k of ui.moveSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
