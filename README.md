@@ -1,4 +1,4 @@
-# 동현전 v0.67
+# 동현전 v0.68
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23768831.svg)](https://doi.org/10.5281/zenodo.23768831)
 
