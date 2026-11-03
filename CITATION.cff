@@ -18,16 +18,19 @@ abstract: >-
   simulation laboratory for one player against a computer opponent (normal
   difficulty, no fog of war). The map, commanders, first move and starting
   funds are chosen only through programs written in the esoteric programming
-  language Donghyun-lang; the battle itself is played with the keyboard
-  (arrow keys, X confirm, Z cancel, S next unit, A info) or on-screen buttons.
-  It includes 20 original maps built with two-fold rotational symmetry,
-  five original commanders, a heuristic computer opponent, and saving and
-  loading in browser slots or as files. It is a fan-inspired hobby work in
-  the genre of grid tactics games; it is not affiliated with or endorsed by
-  Nintendo or Intelligent Systems, and it contains none of their sprites,
-  names, maps or music. All art, names and maps are original. The MIT license
-  applies to the application code, documentation and artwork; the fonts are
-  under the SIL Open Font License. See LICENSE and CREDITS.md.
+  language Donghyun-lang; the battle itself is played with the keyboard (arrow
+  keys, X confirm, Z cancel, S next unit, A info, Shift range), with a
+  Bluetooth or USB gamepad through the browser Gamepad API (Nintendo layout: A
+  = X key, B = Z key, X = S key, Y = A key, d-pad or left stick = arrows, + =
+  Enter, L = Shift), or with on-screen buttons. It includes 20 original maps
+  built with two-fold rotational symmetry, five original commanders, a
+  heuristic computer opponent, and saving and loading in browser slots or as
+  files. It is a fan-inspired hobby work in the genre of grid tactics games;
+  it is not affiliated with or endorsed by Nintendo or Intelligent Systems,
+  and it contains none of their sprites, names, maps or music. All art, names
+  and maps are original. The MIT license applies to the application code,
+  documentation and artwork; the fonts are under the SIL Open Font License.
+  See LICENSE and CREDITS.md.
 keywords:
   - turn-based strategy
   - tactics game
@@ -35,6 +38,7 @@ keywords:
   - pixel art
   - esoteric programming language
   - JavaScript
+  - gamepad
 references:
   - type: software
     title: "Donghyun-lang (동현랭): a Korean esoteric programming language with a browser playground"
