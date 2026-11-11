@@ -2,11 +2,11 @@
 (function(root){
 const T=16, PAD=4; // PAD: 맨 윗줄 산·건물 꼭대기가 잘리지 않게 둔 위 여백
 const PAL={
-  1:{m:'#e5483a',d:'#9a2620',l:'#ff9f86'},
-  2:{m:'#3a78e8',d:'#1f3f99',l:'#97c0ff'},
-  0:{m:'#b9b1a2',d:'#7a7266',l:'#e2dccf'}
+  1:{m:'#ce5146',d:'#823738',l:'#f49b7c'},
+  2:{m:'#467fc0',d:'#294d7b',l:'#9dc8e8'},
+  0:{m:'#a6aaa3',d:'#626f70',l:'#d8ddd3'}
 };
-const C={k:'#231d18',p:'#f59a9a',g:'#9a978c',G:'#5d5b53',w:'#f6f2e8',s:'#f1c493',y:'#f2b705',b:'#2c2722',o:'#e08a2e',c:'#4ff0ff',n:'#ff4fd8',B:'#3a3f4a'};
+const C={k:'#23313c',p:'#dca18b',g:'#99aab2',G:'#52636f',w:'#f5f3dc',s:'#e7bf98',y:'#efc45e',b:'#29343c',o:'#d89152',c:'#86e1df',n:'#e391b4',B:'#384957',v:'#8bbecf',V:'#40677a'};
 
 /* 유닛 도트(오른쪽을 본다). m 진영색 · d 진영 어두운색 · l 진영 밝은색 · k 윤곽 · g/G 금속 · w 흰색 · s 피부 · y 노랑 · c 네온 청록 · n 네온 분홍 · B 장갑판 */
 const SPR={
@@ -375,13 +375,39 @@ const cache={};
 function sprite(type,owner,gray){
   const k=type+owner+(gray?'g':'');
   if(cache[k]) return cache[k];
-  const c=mk(T,T), x=c.getContext('2d'), P=PAL[owner], rows=shade(SPR[type]);
+  const c=mk(T,T), x=c.getContext('2d'), P=PAL[owner], rows=shade(detailPixels(type));
   for(let y=0;y<T;y++){ const r=(rows[y]||'').padEnd(T,'.').slice(0,T);
     for(let i=0;i<T;i++){ const ch=r[i]; if(ch==='.') continue;
       let col=P[ch]||C[ch]; if(!col) continue;
       if(gray) col=grayify(col);
       const px=owner===2?T-1-i:i; x.fillStyle=col; x.fillRect(px,y,1,1); } }
   return cache[k]=c;
+}
+// 기존 병종의 외곽은 보존하고 유리·장갑 이음·차륜을 구분한다.
+const detailCache={};
+function detailPixels(type){
+  if(detailCache[type]) return detailCache[type];
+  const rows=SPR[type].map(r=>r.padEnd(T,'.').slice(0,T).split(''));
+  const set=(x,y,ch)=>{ if(rows[y][x]!=='.') rows[y][x]=ch; };
+  if(['recon','apc','rocket','missile','fighter','bomber','bcopter','tcopter'].includes(type)){
+    rows.forEach((row,y)=>row.forEach((ch,x)=>{ if(ch==='w' && y<9) row[x]=x%3===0?'V':'v'; }));
+  }
+  if(['tank','md','neo','apc','art','aa'].includes(type)){
+    // 장갑판 위의 짧은 밝은 모서리와 낮은 차체의 어두운 이음.
+    const y={tank:9,md:8,neo:3,apc:8,art:9,aa:9}[type];
+    for(let x=3;x<7;x++) if(rows[y][x]==='m') set(x,y,'l');
+    if(type==='tank'){ set(5,5,'l');set(6,5,'l');set(4,6,'d');set(9,6,'d'); }
+    if(type==='neo'){ set(3,5,'l');set(4,5,'l');set(9,3,'B');set(9,4,'B'); }
+  }
+  if(['inf','mech'].includes(type)){
+    set(4,9,'G');set(4,10,'g');set(4,11,'G');set(7,11,'d');set(8,11,'d');
+  }
+  if(['bship','cruiser','carrier','lander'].includes(type)){
+    // 함정의 갑판은 냉회색, 현측은 진영색. 밝은 수선으로 바다와 분리.
+    const y={bship:12,cruiser:11,carrier:12,lander:10}[type];
+    for(let x=4;x<11;x++) if(rows[y][x]==='d') set(x,y,'l');
+  }
+  return detailCache[type]=rows.map(r=>r.join(''));
 }
 /* 자동 음영: 진영색(m) 칸 중 바로 위가 윤곽·빈칸이면 밝게(l), 바로 아래가 윤곽이면 어둡게(d).
    금속(g)은 위쪽을 흰빛(w)으로 살짝 띄운다. 도트 원본은 그대로 두고 그릴 때만 바꾼다. */
@@ -405,11 +431,14 @@ function hash(x,y,s=0){ let h=(x*374761393+y*668265263+s*982451653)>>>0; h=(h^(h
 
 /* ---- 지형 ---- */
 /* 기본 색. 지도마다 색조(theme)를 덧입힌다: 원작의 날씨 화면처럼 타일 모양은 두고 색만 바꾼다. */
-const TC0={grass:'#8fc85b',grassB:'#96cd63',grass2:'#7ab349',grass3:'#a6d872',tree:'#3f8a3a',tree2:'#2d6b2c',trunk:'#6b4a2c',
-  rock:'#a08467',rock2:'#7a604a',snow:'#f4efe4',water:'#4c8fd9',water2:'#3b78c4',wave:'#9cc6f2',sand:'#e9d79a',sand2:'#cdb876',
-  road:'#d3c7a6',road2:'#a39578',road3:'#e3d9bc',plank:'#b8854f',plank2:'#7d5530',plank3:'#d9a66a',foam:'#e8f4ff',deep:'#4384d0',bank:'#6f9c3e',river:'#5aa0e6',river2:'#3f86d2',
+const TC0={grass:'#a6b98b',grassB:'#acbe91',grass2:'#91a879',grass3:'#bed0a5',tree:'#567c61',tree2:'#355947',trunk:'#77644c',
+  rock:'#9ba29b',rock2:'#707e7d',snow:'#eeeede',water:'#548f9f',water2:'#3b7389',wave:'#a9c9ce',sand:'#ddd3ad',sand2:'#b8ac86',
+  road:'#a3aba7',road2:'#798b85',road3:'#e4e2cc',plank:'#a3ada9',plank2:'#61777c',plank3:'#d1d8cb',foam:'#dfebe3',deep:'#437c90',bank:'#6b8973',river:'#6ba4ae',river2:'#4d8596',
   fl:['#fff7e0','#ffd34d','#ffb3c7'],flRate:3,treeTop:null,sparkle:'rgba(235,246,255,.85)'};
 const THEMES={
+  coast:{grass:'#b1bd94',grassB:'#b6c29a',tree:'#4e8270',tree2:'#315e52',water:'#4d91a3',water2:'#316f87',deep:'#3b7d94',sand:'#e4d6b0',wave:'#b4d5d4',foam:'#edf0d9'},
+  highland:{grass:'#a1b29f',grassB:'#a7b8a5',grass2:'#8b9f90',grass3:'#c0cdb6',tree:'#527766',tree2:'#35554d',rock:'#a9b1ab',rock2:'#77888b',road:'#a6ada8'},
+  harvest:{grass:'#c2bd8c',grassB:'#c7c294',grass2:'#a9a679',grass3:'#d8d0a5',tree:'#8b8b59',tree2:'#58664b',rock:'#a69c85',rock2:'#807b6d'},
   // 눈 덮인 고원: 포근한 흰 눈, 눈 얹은 나무, 잿빛 바위
   snow:{grass:'#f2f3ef',grassB:'#ecedea',grass2:'#d9dcd8',grass3:'#ffffff',tree:'#5d8c78',tree2:'#3f6a58',trunk:'#5a4634',treeTop:'#f7fbff',
     rock:'#9aa3ad',rock2:'#6b7480',water:'#a4cde8',water2:'#86b6da',wave:'#eaf6fd',deep:'#97c3e3',foam:'#ffffff',sand:'#e9e6dd',sand2:'#cfcbc0',bank:'#c9d6e2',
@@ -435,15 +464,17 @@ const THEMES={
 };
 let TC=TC0;
 function setTheme(name){ TC=name&&THEMES[name]?Object.assign({},TC0,THEMES[name]):TC0; }
+function mix(a,b,t){ const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16);return '#'+[16,8,0].map(n=>Math.round(((A>>n)&255)*(1-t)+((B>>n)&255)*t).toString(16).padStart(2,'0')).join(''); }
 const isWater=t=>t==='sea'||t==='reef'||t==='river'||t==='shoal'||t==='bridge';
 const seaLike=t=>t==='sea'||t==='reef';
 function drawTerrain(g,map,x,y){
   const cell=map.grid[y][x], t=cell.t, X=x*T, Y=y*T;
   const at=(dx,dy)=>{ const yy=y+dy,xx=x+dx; if(yy<0||xx<0||yy>=map.H||xx>=map.W) return null; return map.grid[yy][xx].t; };
   const R=(a,b,w,h,c)=>{ g.fillStyle=c; g.fillRect(X+a,Y+b,w,h); };
-  const grass=()=>{ R(0,0,T,T,(x+y)%2?TC.grass:TC.grassB); for(let i=0;i<3;i++){ const h=hash(x,y,i); R(h%14+1,(h>>>4)%14+1,1,1,TC.grass2); R((h>>>8)%14+1,(h>>>12)%14+1,1,1,TC.grass3);} };
-  const sea=()=>{ R(0,0,T,T,TC.water); for(let i=0;i<T;i+=4) for(let j=(i/4)%2*2;j<T;j+=4) R(j,i,1,1,TC.deep);
-    const h=hash(x,y,7); R(h%10+2,(h>>>5)%10+3,3,1,TC.wave); R((h>>>9)%10+2,(h>>>13)%10+3,2,1,TC.water2);
+  const grass=()=>{ R(0,0,T,T,(x+y)%2?TC.grass:mix(TC.grass,TC.grassB,.45)); const h=hash(x,y,1); R(h%12+2,(h>>>4)%12+2,2,1,mix(TC.grass,TC.grass2,.55)); R((h>>>8)%12+2,(h>>>12)%12+2,1,1,mix(TC.grass,TC.grass3,.55)); };
+  const sea=()=>{ const near=[at(0,-1),at(0,1),at(-1,0),at(1,0)].some(n=>n&&!seaLike(n));
+    R(0,0,T,T,near?mix(TC.water,TC.wave,.18):TC.deep);
+    const h=hash(x,y,7); if(h%3===0){ R(h%9+3,(h>>>5)%10+3,4,1,mix(TC.water,TC.wave,.55)); R(h%9+4,(h>>>5)%10+4,2,1,TC.water); }
     // 땅과 맞닿은 쪽에 모래 가장자리와 흰 물결
     const land=(dx,dy)=>{ const n=at(dx,dy); return n && !isWater(n); };
     const U=land(0,-1),Dn=land(0,1),L=land(-1,0),Rt=land(1,0);
@@ -455,8 +486,8 @@ function drawTerrain(g,map,x,y){
     if(!Dn&&!Rt&&land(1,1)){ R(T-2,T-2,2,2,TC.sand); R(T-3,T-2,1,2,TC.foam); R(T-3,T-3,3,1,TC.foam); } };
   if(t==='plain'){ grass(); const h=hash(x,y,11), F=TC.fl; if(h%TC.flRate===0){ const fx=2+h%11, fy=3+(h>>>5)%10; R(fx,fy,1,1,F[0]); R(fx+1,fy+1,1,1,F[1+(h>>>9)%(F.length-1)]); }
     if(TC.flRate===1&&h%2){ const fx=1+(h>>>13)%12, fy=1+(h>>>17)%12; R(fx,fy,1,1,F[1+(h>>>21)%(F.length-1)]); R(fx+1,fy,1,1,F[0]); } }
-  else if(t==='forest'){ grass(); const pp=propPal(0); R(1,13,14,2,'rgba(20,30,10,.22)'); for(const [a,b] of [[5,-3],[1,3],[8,4]]) stamp(g,PROP.tree,X+a,Y+b,pp); }
-  else if(t==='mountain'){ grass(); stamp(g,PROP.mountain,X,Y-4,propPal(0)); }
+  else if(t==='forest'){ grass(); const pp={...propPal(0),k:mix(TC.tree2,'#23313c',.3)}; R(1,13,14,2,'rgba(31,60,49,.18)'); for(const [a,b] of [[5,-3],[0,3],[8,4]]) stamp(g,PROP.tree,X+a,Y+b,pp); }
+  else if(t==='mountain'){ grass(); stamp(g,PROP.mountain,X,Y-4,{...propPal(0),k:TC.rock2,w:TC.snow,v:mix(TC.rock,TC.snow,.35)}); }
   else if(t==='road'||t==='bridge'||t==='river'){
     if(t==='road') grass(); else { grass(); }
     const conn=n=>{ if(!n) return false; if(t==='river') return n==='river'||n==='bridge'||seaLike(n)||n==='shoal';
@@ -482,10 +513,9 @@ function drawTerrain(g,map,x,y){
       if(!rt){ R(T-3,0,3,T,TC.grass); R(T-4,up?0:3,1,T-(up?0:3)-(dn?0:3),edge); }
       if(!up&&!lf) R(0,0,4,4,TC.grass); if(!up&&!rt) R(T-4,0,4,4,TC.grass); if(!dn&&!lf) R(0,T-4,4,4,TC.grass); if(!dn&&!rt) R(T-4,T-4,4,4,TC.grass);
       if(!up&&!lf) R(3,3,1,1,edge); if(!up&&!rt) R(T-4,3,1,1,edge); if(!dn&&!lf) R(3,T-4,1,1,edge); if(!dn&&!rt) R(T-4,T-4,1,1,edge);
-      // 가운데 밝은 바퀴 자국
-      if(lf||rt){ const a=lf?0:7,b=rt?T:8; R(a,7,b-a,1,TC.road3); }
-      if(up||dn){ const a=up?0:7,b=dn?T:8; R(7,a,1,b-a,TC.road3); }
-      const h=hash(x,y,9); R(4+h%8,4+(h>>>4)%8,1,1,edge); R(4+(h>>>8)%8,4+(h>>>12)%8,1,1,TC.road3);
+      // 현대 도로: 교차로는 비우고 직선에만 짧은 중앙선을 둔다.
+      if(lf&&rt&&!up&&!dn){ R(1,7,5,1,TC.road3); R(10,7,5,1,TC.road3); }
+      if(up&&dn&&!lf&&!rt){ R(7,1,1,5,TC.road3); R(7,10,1,5,TC.road3); }
     } else {
       // 강: 칸을 물로 채우고, 물이 이어지지 않는 쪽에 풀 둑을 남긴다
       R(0,0,T,T,TC.river);
@@ -527,11 +557,11 @@ hq:[
 '....kmmmmmdk....','...kkkkkkkkkk...','..klllllllllk...','.kkkkkkkkkkkkkk.','.kmmmmmmmmmmmdk.','.kmwkmwkmwkmmdk.',
 '.kmwkmwkmwkmmdk.','.kmwkmwkmwkmmdk.','.kmmmmmmmmmmmdk.','.kmmmmkkkmmmmdk.','.kkkkkkkkkkkkkk.','..SSSSSSSSSSSSS.'],
 mountain:[
-'................','.......kk.......','......kwwk......','.....kwwwRk.....','.....kwwrRk.....','....krrwrRRk....',
-'....krrrrRRk....','...krrrrrRRRk...','...krrrrrRRRk...','..krrrrrrRRRRk..','..krrrrrRRRRRk..','.krrrrrrRRRRRRk.',
-'.krrrrrrRRRRRRk.','krrrrrrrRRRRRRRk','krrrrrrRRRRRRRRk','kkkkkkkkkkkkkkkk','.SSSSSSSSSSSSSS.'],
+'................','.......kk.......','......kwwk......','.....kwwwRk.....','.....kwvrRk.....','....kvvwrRRk....',
+'....kvvrrRRk....','...kvvvrrRRRk...','...kvvrrrRRRk...','..kvvvrrrRRRRk..','..kvvrrvrRRRRk..','.kvvvrrvrRRRRRk.',
+'.kvvrrvrrRRRRRk.','kvvvrrvrrRRRRRRk','kvvrrvrrRRRRRRRk','kkkkkkkkkkkkkkkk','.SSSSSSSSSSSSSS.'],
 tree:[
-'..kkk..','.kaabk.','kaabbbk','kabbbck','kbbbcck','.kccck.','..ktk..','..kkk..']
+'...k...','..kak..','.kaabk.','kaabbbk','.kbbck.','kbbbcck','.kccck.','..ktk..']
 };
 function stamp(g,rows,X,Y,pal){
   for(let y=0;y<rows.length;y++){ const r=rows[y];
@@ -547,7 +577,8 @@ function drawProperty(g,cell,X,Y,at){
   if(t==='airport'){ R(0,11,T,5,TC.road2); R(0,11,T,1,TC.sand2); for(let i=1;i<T;i+=5) R(i,13,3,1,C.w); stamp(g,PROP.airport,X,Y-4,pal); return; }
   stamp(g,PROP[t],X,Y-4,pal);
 }
-function themeOf(map){ if(map.theme!==undefined) return map.theme; const D=root.DH_DATA; const m=D&&D.MAPS.find(m=>m.id===map.id); return m&&m.theme; }
+function themeOf(map){ const D=root.DH_DATA, m=D&&D.MAPS.find(m=>m.id===map.id), explicit=map.theme||(m&&m.theme);
+  return explicit||([3,7,9,11,15,18,19,20,24].includes(map.id)?'coast':[4,10,17,22].includes(map.id)?'highland':map.id===23?'harvest':null); }
 function terrainLayer(map){
   setTheme(themeOf(map));
   const c=mk(map.W*T,map.H*T+PAD), g=c.getContext('2d'); g.translate(0,PAD);
@@ -557,6 +588,29 @@ function terrainLayer(map){
 function digit(g,n,x,y,col){ const s=String(n); let ox=x;
   for(const ch of s){ const d=DIG[ch]; g.fillStyle=C.k; g.fillRect(ox-1,y-1,5,7); g.fillStyle=col||C.w;
     for(let r=0;r<5;r++) for(let i=0;i<3;i++) if(d[r][i]==='1') g.fillRect(ox+i,y+r,1,1); ox+=4; } }
+
+// 지형 위의 부대만 한 도트 밝은 윤곽으로 분리한다. 목록용 그림 크기는 그대로다.
+const rimCache=new Map();
+function unitRim(spr){
+  if(rimCache.has(spr))return rimCache.get(spr);
+  const c=mk(T+2,T+2),g=c.getContext('2d');
+  for(const [x,y] of [[0,1],[2,1],[1,0],[1,2]])g.drawImage(spr,x,y);
+  g.globalCompositeOperation='source-in';g.fillStyle='#f2efda';g.fillRect(0,0,T+2,T+2);
+  rimCache.set(spr,c);return c;
+}
+function teamMark(g,owner,x,y){
+  g.fillStyle=C.k;g.fillRect(x,y,5,4);g.fillStyle=PAL[owner].l;
+  if(owner===1)g.fillRect(x+1,y+1,3,2);
+  else {g.fillRect(x+2,y,1,1);g.fillRect(x+1,y+1,3,2);g.fillRect(x+2,y+3,1,1);}
+}
+function rangeTiles(g,set,attack){
+  for(const k of set){const x=(k%1000)*T,y=Math.floor(k/1000)*T;
+    g.fillStyle=attack?'rgba(206,81,70,.24)':'rgba(94,165,189,.24)';g.fillRect(x,y,T,T);
+    g.fillStyle=attack?'#9e3e39':'#3d778a';
+    if(attack){for(const [a,b] of [[1,1],[12,1],[1,12],[12,12]]){g.fillRect(x+a,y+b,3,1);g.fillRect(x+a,y+b,1,3);}}
+    else {g.fillRect(x+1,y+1,14,1);g.fillRect(x+1,y+14,14,1);g.fillRect(x+1,y+1,1,14);g.fillRect(x+14,y+1,1,14);}
+  }
+}
 
 /* ---- 장면 ---- */
 function draw(g, s, ui, now){
@@ -570,8 +624,8 @@ function draw(g, s, ui, now){
   { const ph=Math.floor(now/650); g.fillStyle=TC.sparkle;
     for(const [x,y,t] of ui.seaTiles){ const h=hash(x,y,ph&7); if(h%4) continue; const k=t==='river'?6:10; g.fillRect(x*T+3+(h>>>3)%k,y*T+3+(h>>>7)%k,2,1); } }
   // 이동 · 공격 범위
-  if(ui.moveSet){ g.fillStyle='rgba(120,190,255,.48)'; for(const k of ui.moveSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
-  if(ui.atkSet){ g.fillStyle='rgba(240,70,50,.42)'; for(const k of ui.atkSet){ g.fillRect((k%1000)*T,Math.floor(k/1000)*T,T,T);} }
+  if(ui.moveSet) rangeTiles(g,ui.moveSet,false);
+  if(ui.atkSet) rangeTiles(g,ui.atkSet,true);
   if(ui.spots){ g.fillStyle='rgba(255,220,80,.55)'; for(const [x,y] of ui.spots) g.fillRect(x*T,y*T,T,T); }
   // 경로 화살표
   if(ui.path && ui.path.length>1){
@@ -596,8 +650,11 @@ function draw(g, s, ui, now){
       g.fillStyle='rgba(15,20,10,.25)'; if(air){ g.fillRect(rx+5,ry+15,6,1); } else { g.fillRect(rx+3,ry+15,10,1); }
       g.fillStyle=tc; if(air){ g.fillRect(rx+4,ry+14,8,1); } else { g.fillRect(rx+2,ry+14,12,1); g.fillRect(rx+3,ry+13,10,1); } }
     g.globalAlpha=u.dived?.55:1;
+    g.drawImage(unitRim(spr),Math.round(px)-1,Math.round(py)-bob-1);
     g.drawImage(spr,Math.round(px),Math.round(py)-bob);
     g.globalAlpha=1;
+    // 왼쪽의 연료·탄약 경고, 오른쪽 체력 숫자를 비워 둔다.
+    teamMark(g,u.owner,Math.round(px)+6,Math.round(py)+12);
     const hp=Math.ceil(u.hp/10);
     if(hp<10) digit(g,hp,Math.round(px)+12,Math.round(py)+10);
     const d=UNITS[u.type];
