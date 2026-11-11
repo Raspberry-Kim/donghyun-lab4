@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 title: "Donghyunjeon (동현전): a single-player turn-based strategy simulation laboratory against the computer, set up through the esoteric language Donghyun-lang"
 type: software
-version: "0.69"
-date-released: "2026-11-03"
+version: "0.70"
+date-released: "2026-11-11"
 doi: "10.5281/zenodo.23768831"
 authors:
   - family-names: Kim
@@ -22,8 +22,8 @@ abstract: >-
   keys, X confirm, Z cancel, S next unit, A info, Shift range), with a
   Bluetooth or USB gamepad through the browser Gamepad API (Nintendo layout: A
   = X key, B = Z key, X = S key, Y = A key, d-pad or left stick = arrows, + =
-  Enter, L = Shift), or with on-screen buttons. It includes 28 original maps
-  built with two-fold rotational symmetry, 21 unit types including stealth
+  Enter, L = Shift), or with on-screen buttons. It includes 28 original maps,
+  21 unit types including stealth
   fighters and aircraft carriers, nine original commanders with special
   powers, a heuristic computer opponent, and saving and loading in browser
   slots or as files. It is a fan-inspired hobby work in the genre of grid
