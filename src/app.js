@@ -395,7 +395,7 @@ function rangeTiles(u){
   const set=new Set(), r=E.rangeOf(S,u); if(!r) return set;
   if(UNITS[u.type].indirect){ for(let y=0;y<S.map.H;y++) for(let x=0;x<S.map.W;x++){ const d=E.dist(x,y,u.x,u.y); if(d>=r[0]&&d<=r[1]) set.add(E.key(x,y)); } }
   else { const R2=E.reach(S,u); for(const k of R2.dist.keys()){ const x=k%1000,y=Math.floor(k/1000); for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const nx=x+dx,ny=y+dy; if(nx>=0&&ny>=0&&nx<S.map.W&&ny<S.map.H) set.add(E.key(nx,ny)); } } }
-  return set;
+  set.view=true; return set;
 }
 function select(u){
   sel=u; orig={x:u.x,y:u.y}; reachR=E.reach(S,u); mode='move';
