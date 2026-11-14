@@ -1,4 +1,4 @@
-// 엔진만으로 20개 지도를 컴퓨터 대 컴퓨터로 끝까지(최대 40일) 둔다.
+// 엔진만으로 20개 지도를 동현AI™ 대 동현AI™로 끝까지(최대 40일) 둔다.
 const D=require('../src/data.js');
 const E=require('../src/engine.js'); const AI=require('../src/ai.js');
 for(const m of D.MAPS){

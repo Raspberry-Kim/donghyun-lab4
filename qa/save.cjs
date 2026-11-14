@@ -6,7 +6,7 @@ await p.selectOption('#example','strait');await p.click('#run');
 const st=()=>p.evaluate(()=>JSON.parse(render_game_to_text()));
 for(let i=0;i<80;i++){const s=await st();if(s.turn===1&&s.mode==='idle')break;await p.keyboard.press('z');await p.waitForTimeout(150);}
 await p.waitForTimeout(1500);
-// 내 차례 몇 수: 컴퓨터 판단으로 진행 + 수송 탑승 상황 만들기
+// 내 차례 몇 수: 동현AI™ 판단으로 진행 + 수송 탑승 상황 만들기
 await p.evaluate(()=>{const S=__dongHyunJeon.state;for(let i=0;i<60;i++){const a=AI.next(S);if(!a||a.k==='end')break;AI.apply(S,a);}
  const inf=S.units.find(u=>u.owner===1&&u.type==='inf'); if(inf){ const t={id:S.nextId++,type:'apc',owner:1,x:inf.x,y:inf.y,hp:100,fuel:70,ammo:0,done:true,cargo:[inf],dived:false}; inf.carried=true; S.units.push(t);} });
 const before=await p.evaluate(()=>{const S=__dongHyunJeon.state;return JSON.stringify({d:S.day,f:S.players[1].funds,n:S.units.length,seed:S.seed,cargo:S.units.filter(u=>u.cargo.length).map(u=>[u.id,u.cargo.map(c=>c.id)])});});
@@ -31,7 +31,7 @@ await p.screenshot({path:__dirname+'/shot-load.png'});
 fs.writeFileSync(__dirname+'/bad.dhsave','{"format":"x"}'); await p.keyboard.press('Enter'); await pick('불러오기'); await pick('파일에서 불러오기');
 await p.setInputFiles('#load-file',__dirname+'/bad.dhsave'); await p.waitForTimeout(200);
 console.log('bad status',await p.textContent('#status'));
-// 컴퓨터 차례 진행이 이어지는지
+// 동현AI™ 차례 진행이 이어지는지
 await p.keyboard.press('Enter'); await pick('턴 종료'); s=await st(); if(s.menu) await p.keyboard.press('x');
 for(let i=0;i<80;i++){s=await st();if(s.turn===1&&s.mode==='idle')break;await p.keyboard.press('z');await p.waitForTimeout(150);}
 await p.waitForTimeout(1500); s=await st(); console.log('next day',s.day,s.mode);

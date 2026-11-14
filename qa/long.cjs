@@ -10,7 +10,7 @@ const {chromium}=require('playwright');
   for(let day=0;day<(+process.env.DAYS||60);day++){
     for(let i=0;i<100;i++){ const s=await st(); if(s.mode==='over'||(s.turn===1&&s.mode==='idle')) break; await p.keyboard.press('z'); await p.waitForTimeout(150); }
     let s=await st(); if(s.mode==='over') break;
-    // 내 차례를 컴퓨터 판단으로 대신 둔다(엔진 직접 호출)
+    // 내 차례를 동현AI™ 판단으로 대신 둔다(엔진 직접 호출)
     await p.evaluate(()=>{const S=__dongHyunJeon.state;for(let i=0;i<300;i++){const a=AI.next(S);if(!a||a.k==='end')break;AI.apply(S,a);if(S.winner)break;}});
     s=await st(); if(s.winner){ await p.keyboard.press('s'); }
     await p.keyboard.press('Enter'); await p.waitForTimeout(50);
