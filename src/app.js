@@ -37,7 +37,7 @@ $('.brand').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=pla
 const coCard=c=>`<article><h4>${c.id} · ${c.name}<small>${c.role}</small></h4><p>${c.passive}</p><p><b>${c.cop.name}</b> ${'★'.repeat(c.cop.stars)} · ${c.cop.text}</p><p><b>${c.scop.name}</b> ${'★'.repeat(c.scop.stars)} · ${c.scop.text}</p><q>${c.line}</q></article>`;
 $('#co-grid').innerHTML=COS.filter(c=>!c.army).map(coCard).join('');
 $('#co-grid-bm').innerHTML=COS.filter(c=>c.army===2).map(coCard).join('');
-const MT={foot:'보병',mech:'기계화',tread:'궤도',tire:'바퀴',air:'항공',ship:'함선',lander:'수송함'};
+const MT={foot:'보병',mech:'기계화',tread:'궤도',tire:'바퀴',air:'항공',ship:'함선',lander:'함선·모래톱'};
 $('#unit-table').innerHTML='<thead><tr><th>병종</th><th>가격</th><th>이동</th><th>이동 유형</th><th>연료</th><th>탄약</th><th>사거리</th><th>생산</th></tr></thead><tbody>'+
   UNIT_ORDER.map(t=>{const d=UNITS[t];const where=Object.keys(BUILD).find(k=>BUILD[k].includes(t));return `<tr><td>${d.name}</td><td>${won(d.cost)}</td><td>${d.move}</td><td>${MT[d.mt]}</td><td>${d.fuel}${d.daily?` (−${d.daily}/일)`:''}</td><td>${d.ammo||'—'}</td><td>${d.range?(d.range[0]===d.range[1]?d.range[0]:d.range.join('~')):'—'}</td><td>${{factory:'공장',airport:'공항',port:'항구'}[where]}</td></tr>`;}).join('')+'</tbody>';
 
@@ -218,6 +218,8 @@ function processEvents(){
     else if(e.k==='power'){ log(`<b>${coName(S.players[e.p].co)}</b> · ${e.name}`,e.p); ui.fx.push({k:'power',x:0,y:0,t0:now,dur:900}); }
     else if(e.k==='load'){ log(`<b>${UN(e.type)}</b> ${UN(e.into)}에 탑승`,e.owner); }
     else if(e.k==='unload'){ log(`<b>${UN(e.type)}</b> 하차`,e.owner); }
+    else if(e.k==='repair'){ log(`<b>${UN(e.type)}</b> → ${UN(e.tt)} ${e.heal?`수리 +1 · 값 ${won(e.price)}`:e.poor?'자금이 모자라 보충만':'보충'}`,e.owner); if(S.turn===1) SND.play('rows');
+      ui.fx.push({k:'num',x:e.x,y:e.y,t0:now,dur:900,text:e.heal?'+1':'+',col:'#b8f2a0'}); }
     else if(e.k==='join'){ log(`<b>${UN(e.type)}</b> 합류`,e.owner); }
     else if(e.k==='turn'){ log(`${e.day}일째 · ${side(e.p)} 차례 · 수입 ${won(e.income)}`,e.p); }
   }
@@ -238,7 +240,7 @@ function hud(){
   $('#fs-co').innerHTML=[1,2].map(p=>{const P=S.players[p], co=COS[P.co-1], pw=E.powOf(S,p); return `<span class="fc p${p}${S.turn===p&&!S.winner?' turn':''}"><b>${p===1?'나':AI_H}</b> ${co.name} · 자금 ${won(P.funds)} · 거점 ${E.propsOf(S,p)} · 유닛 ${S.units.filter(u=>u.owner===p).length} · ★${Math.floor(P.meter/STAR_VALUE)}${P.power?` · ${P.power===2?pw.scop.name:pw.cop.name} 사용 중`:''}</span>`;}).join('');
   $('#day').textContent=`${S.day}일째`;
   const tb=$('#turn-badge'); tb.textContent=S.turn===1?'나의 차례':AI_T+' 차례'; tb.className='p'+S.turn;
-  if(!S.winner) status(mode==='cpu'||S.turn===2?AI_T+'가 생각하는 중':'나의 차례 · '+({idle:'유닛을 고르자',move:'갈 곳을 고르자',action:'명령을 고르자',target:'공격 대상을 고르자',unload:'내릴 곳을 고르자',menu:'메뉴',build:'생산',info:'정보'}[mode]||''));
+  if(!S.winner) status(mode==='cpu'||S.turn===2?AI_T+'가 생각하는 중':'나의 차례 · '+({idle:'유닛을 고르자',move:'갈 곳을 고르자',action:'명령을 고르자',target:'공격 대상을 고르자',unload:'내릴 곳을 고르자',repair:'수리할 유닛을 고르자',menu:'메뉴',build:'생산',info:'정보'}[mode]||''));
   infoCard();
 }
 function infoCard(){
@@ -246,6 +248,11 @@ function infoCard(){
   if(mode==='target'&&tgt){ const t=tgt.list[tgt.i], f=E.forecast(S,sel,t,sel.x,sel.y);
     box.innerHTML=`<h3>${UN(sel.type)} → ${UN(t.type)}<small>예상</small></h3><div class="forecast"><div><span>내 공격</span><strong>${f.lo}~${f.hi}%</strong></div><div><span>상대 반격</span><strong>${f.counterMin===f.counter?f.counter:f.counterMin+'~'+f.counter}%</strong></div></div><p>상대 체력 ${Math.ceil(t.hp/10)} · ${TN(S.map.grid[t.y][t.x].t)} ★${UNITS[t.type].mt==='air'?0:TERRAIN[S.map.grid[t.y][t.x].t].def}. 운에 따라 범위 안에서 정해진다.</p>`;
     $('#tile-info').textContent=`예상 피해 ${f.lo}~${f.hi}% · 반격 최대 ${f.counter}%`; return; }
+  if(mode==='repair'&&spots){ const t=spots.units[spots.i], pl=E.repairPlan(S,sel,t), dd=UNITS[t.type];
+    const what=pl.heal?`체력 ${pl.hp} → ${pl.hp+1} · 값 ${won(pl.price)}`:pl.full?'체력이 가득하다 · 보충만 한다':`자금이 모자라다(값 ${won(pl.price)}) · 보충만 한다`;
+    box.innerHTML=`<h3>${UN(sel.type)} → ${UN(t.type)}<small>수리</small></h3><div class="row"><span>${what}</span><span>연료 <b>${t.fuel}</b> → ${dd.fuel}</span><span>탄약 <b>${dd.ammo?t.ammo+' → '+dd.ammo:'—'}</b></span></div><p>수리받은 유닛은 이번 차례에 그대로 움직일 수 있다.</p>`;
+    $('#tile-info').textContent=`수리 · ${UN(t.type)} · ${what}`;
+    if($('#stage-full').classList.contains('fs')) $('#fs-info').textContent=`수리 · ${UN(t.type)} · ${what}`; return; }
   const [x,y]=ui.cursor, t=S.map.grid[y][x], u=E.unitAt(S,x,y), td=TERRAIN[t.t];
   let h=`<h3>${td.name}${td.prop?` · ${t.owner?side(t.owner):'중립'}`:''}<small>방어 ★${td.def}</small></h3>`;
   if(td.prop) h+=`<div class="row"><span>점령값 <b>${t.capId?t.cp:20}</b>/20</span><span>${t.t==='hq'?'점령하면 승리':t.t==='city'?`수입 ${INC(t)} · 회복`:`수입 ${INC(t)} · 생산`}</span></div>`;
@@ -423,6 +430,7 @@ function actionMenu(){
       if(d.cap && TERRAIN[t.t].prop && t.owner!==1) items.push({label:'점령',note:`남은 ${t.capId===u.id?t.cp:20}`,fn:()=>act('capture')});
       if(d.supply && S.units.some(v=>v.owner===1&&v!==u&&!v.carried&&E.dist(v.x,v.y,u.x,u.y)===1)) items.push({label:'보급',fn:()=>act('supply')});
       if(d.dive) items.push({label:DIVE_WORD(u.type,!u.dived),fn:()=>act('dive')});
+      if(d.repair && E.repairTargets(S,u).length) items.push({label:'수리',fn:startRepair});
     }
     if(u.cargo.length && u.cargo.some(c=>E.unloadSpots(S,u,c).length)) items.push({label:'하차',fn:startUnload});
     items.push({label:'대기',fn:()=>act('wait')});
@@ -454,6 +462,14 @@ async function fire(){
   const t=tgt.list[tgt.i]; commit(); ui.atkSet=null; tgt=null; busy=true;
   E.attack(S,sel,t); if(S.units.includes(sel)) sel.done=true; processEvents(); hud();
   await sleep(reduced?100:520); busy=false; done();
+}
+function startRepair(){
+  closeMenu(); const list=E.repairTargets(S,sel);
+  spots={units:list,list:list.map(t=>[t.x,t.y]),i:0}; mode='repair'; ui.spots=spots.list; ui.cursor=[...spots.list[0]]; hud();
+}
+function doRepair(){
+  const t=spots.units[spots.i]; commit(); E.repair(S,sel,t); spots=null; ui.spots=null;
+  if(S.units.includes(sel)) sel.done=true; done();
 }
 function startUnload(){
   closeMenu(); const can=sel.cargo.filter(c=>E.unloadSpots(S,sel,c).length);
@@ -490,7 +506,7 @@ async function runCPU(){
       if(a.path.length>1){ ui.anim={id:u.id,path:a.path,t0:performance.now(),dur:(fast||reduced?14:65)*(a.path.length-1)}; await sleep(ui.anim.dur); ui.anim=null; }
       ui.cursor=[a.x,a.y];
       AI.apply(S,a); processEvents(); hud();
-      await wait(a.act==='attack'?560:a.act==='capture'?300:120);
+      await wait(a.act==='attack'?560:a.act==='capture'||a.act==='repair'?300:120);
       if(finishCheck()) return;
     }
   }
@@ -536,6 +552,12 @@ function key(k){
     else if(k==='x'){ tgt=null; ui.atkSet=null; actionMenu(); }
     return;
   }
+  if(mode==='repair'){
+    if(mv){ const n=spots.list.length; spots.i=(spots.i+(mv[0]+mv[1]>0?1:-1)+n)%n; ui.cursor=[...spots.list[spots.i]]; hud(); }
+    else if(k==='z') doRepair();
+    else if(k==='x'){ spots=null; ui.spots=null; actionMenu(); }
+    return;
+  }
   if(mode==='unload'){
     if(mv){ const n=spots.list.length; spots.i=(spots.i+(mv[0]+mv[1]>0?1:-1)+n)%n; ui.cursor=[...spots.list[spots.i]]; hud(); }
     else if(k==='z') doUnload();
@@ -569,6 +591,7 @@ canvas.addEventListener('click',e=>{
   const r=canvas.getBoundingClientRect(), x=Math.floor((e.clientX-r.left)/r.width*S.map.W), y=Math.floor(((e.clientY-r.top)/r.height*canvas.height-R.PAD)/R.T);
   if(x<0||y<0||x>=S.map.W||y>=S.map.H) return;
   if(mode==='target'){ const i=tgt.list.findIndex(t=>t.x===x&&t.y===y); if(i<0) return; if(i===tgt.i) return key('z'); tgt.i=i; ui.cursor=[x,y]; return hud(); }
+  if(mode==='repair'){ const i=spots.list.findIndex(([a,b])=>a===x&&b===y); if(i<0) return; if(i===spots.i) return key('z'); spots.i=i; ui.cursor=[x,y]; return hud(); }
   if(ui.cursor[0]===x&&ui.cursor[1]===y) return key('z');
   ui.cursor=[x,y]; updatePath(); hud();
 });

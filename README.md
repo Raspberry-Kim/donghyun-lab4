@@ -1,4 +1,4 @@
-# 동현전 v0.78
+# 동현전 v1.00
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23768831.svg)](https://doi.org/10.5281/zenodo.23768831)
 
@@ -10,8 +10,8 @@
 - 조작: 키보드(방향키·X·Z·S·A·Shift·Enter) 또는 블루투스·USB 게임패드(닌텐도 배치 A=X키 확인 · B=Z키 취소 · X=S키 다음 유닛 · Y=A키 정보 · L=Shift 사거리 · +=메뉴). 휴대폰은 화면 버튼. 자세한 것은 아래 [조작](#조작).
 - 모드: 1인 대 동현AI™만 있다. 네트워크 대전, 2인 대전, 시나리오 모드는 없다. 동현AI™는 학습한 인공지능 모델이 아니라, 정해진 규칙으로 수를 고르는 컴퓨터 상대다.
 - 난이도: 보통. 안개(전장의 안개): 없음.
-- 지도 28종(1–28, 모두 새로 그린 지도), 유닛 21종(스텔스기·항공모함 포함), 지휘관 9명(붉은별 사령부 1–5, 푸른달 사령부 6–9).
-- 피해표는 원작 2편의 값에 맞췄다. 스텔스기·항공모함은 [AWBW 병종표](https://awbw.amarriner.com/units.php)·[AWBW 피해표](https://awbw.amarriner.com/damage.php)를 따른다.
+- 지도 28종(1–28, 모두 새로 그린 지도), 유닛 22종(스텔스기·항공모함·블랙보트 포함), 지휘관 9명(붉은별 사령부 1–5, 푸른달 사령부 6–9).
+- 피해표는 원작 2편의 값에 맞췄다. 스텔스기·항공모함·블랙보트는 [AWBW 병종표](https://awbw.amarriner.com/units.php)·[AWBW 피해표](https://awbw.amarriner.com/damage.php)를 따른다.
 
 ## 동현전 출전 규약
 
@@ -67,7 +67,7 @@ node build.cjs   # dist/index.html과 루트 index.html(GitHub Pages용) 단일 
 
 ## 그림 검사
 
-`node qa/design.cjs`로 지도 28개와 병종 21종의 양 진영·행동 완료 그림을 확인한다. 생산·이동·전투·저장·불러오기·전체 화면과 휴대폰 화면도 검사하며, 비교 화면과 결과는 `qa/design-output/`에 남긴다. Playwright와 Chromium이 필요하다.
+`node qa/design.cjs`로 지도 28개와 병종 22종의 양 진영·행동 완료 그림을 확인한다. 생산·이동·전투·저장·불러오기·전체 화면과 휴대폰 화면도 검사하며, 비교 화면과 결과는 `qa/design-output/`에 남긴다. Playwright와 Chromium이 필요하다.
 
 ## 라이선스
 
