@@ -49,7 +49,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=r
     }
     return {maps:sums.length,types:variants.length,variants:variants.length*4};
   },war);
-  assert.equal(matrix.maps,war?12:28);assert.equal(matrix.types,war?32:21);ok(JSON.stringify(matrix)+' 지도·부대 전수 렌더와 상태 불변');
+  assert.equal(matrix.maps,war?12:28);assert.equal(matrix.types,war?32:22);ok(JSON.stringify(matrix)+' 지도·부대 전수 렌더와 상태 불변');
   await p.selectOption('#example',war?'first':'field');
   const valid=await p.locator('#code').inputValue();await p.fill('#code','틀린 코드');await p.click('#run');
   assert.equal((await state()).mode,'setup');assert.equal(await p.locator('#result').getAttribute('data-kind'),'error');

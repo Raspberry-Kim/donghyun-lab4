@@ -58,7 +58,7 @@ function navyCtx(s,ctx){
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const c=s.map.grid[y][x]; if(TERRAIN[c.t].prop&&c.owner===ctx.q) marks.push([x,y]); }
   const useful=new Map();
   ctx.navy={
-    mine:ctx.mine.filter(ships), enemy:ctx.enemies.filter(ships),
+    mine:ctx.mine.filter(u=>ships(u)&&!UNITS[u.type].repair), enemy:ctx.enemies.filter(ships), // 블랙보트는 함대 수에 넣지 않는다
     useful(x,y){ const k=x+','+y; if(useful.has(k)) return useful.get(k);
       const f=field(s,'ship',[[x,y]]); let ok=false;
       for(const [mx,my] of marks){ for(let dy=-2;dy<=2&&!ok;dy++) for(let dx=-2+Math.abs(dy);dx<=2-Math.abs(dy)&&!ok;dx++){ const X=mx+dx,Y=my+dy; if(X>=0&&Y>=0&&X<W&&Y<H&&isFinite(f(X,Y))) ok=true; } if(ok) break; }
@@ -87,7 +87,7 @@ function bestFor(s,ctx,u){
   const hqField=getField(s,ctx,mt,'hq',()=>ctx.targetsProps.filter(([x,y])=>s.map.grid[y][x].t==='hq'));
   const repKind=d.cls==='plane'||d.cls==='copter'?'air':d.cls==='ship'?'ship':'ground';
   const repField=getField(s,ctx,mt,'rep'+repKind,()=>ctx.repairs(repKind));
-  const wantRepair = hpD<=3 && !d.cap || (d.daily && u.fuel<d.daily*4+8);
+  const wantRepair = hpD<=3 && !d.cap || (d.daily && u.fuel<d.daily*4+8) || (d.repair && u.fuel<=21); // 블랙보트는 연료 60에 이동 7이라 일찍 돌아간다
   let best={v:-Infinity};
   const consider=(v,plan)=>{ if(v>best.v) best={v,...plan}; };
   for(const k of R.dist.keys()){
@@ -113,11 +113,26 @@ function bestFor(s,ctx,u){
       let v=PROP_VALUE[t.t]*(finish?1.4:0.9)+(t.owner?600:0)+(t.capId===u.id?1500:0);
       consider(v-risk*0.6, {x,y,c,act:'capture'});
     }
+    // 수리(블랙보트): 이웃 아군 하나의 체력 +1과 보충. 값이 가장 큰 유닛을 고른다
+    if(d.repair && !wantRepair){
+      for(const tg of E.repairTargets(s,u,x,y)){
+        const pl=E.repairPlan(s,u,tg), td=UNITS[tg.type];
+        let v=pl.heal?td.cost/10*1.2:0;
+        if(td.fuel && tg.fuel<td.fuel*0.4) v+=td.cost*0.05+(td.daily&&tg.fuel<td.daily*4+8?td.cost*0.3:0);
+        if(td.ammo && tg.ammo<td.ammo*0.4) v+=td.cost*0.04+(tg.ammo===0?td.cost*0.1:0);
+        if(v>0) consider(v-risk+stars*30+200, {x,y,c,act:'repair',target:tg});
+      }
+    }
     // 대기(다음 목표 쪽으로 다가가기)
     let pos;
     if(wantRepair) pos=-repField(x,y)*260 + (repField(x,y)===0?1500:0);
     else if(d.cap) pos=-Math.min(propField(x,y),enemyField(x,y)+6)*180;
     else if(d.indirect){ const r=E.rangeOf(s,u); const ef=enemyField(x,y); pos=-Math.max(0,ef-r[1])*170 - (ef<r[0]?400:0); }
+    else if(d.repair){ // 블랙보트: 다친 아군 곁으로, 없으면 함대 곁으로
+      const hurtF=getField(s,ctx,mt,'hurt',()=>ctx.mine.filter(o=>o!==u&&E.disp(o.hp)<10).flatMap(o=>[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>[o.x+dx,o.y+dy])).filter(([a,b])=>a>=0&&b>=0&&a<s.map.W&&b<s.map.H&&MOVE_COST[mt][TIDX[s.map.grid[b][a].t]]));
+      const fleetF=getField(s,ctx,mt,'fleet',()=>ctx.mine.filter(o=>o!==u&&UNITS[o.type].cls==='ship').map(o=>[o.x,o.y]).filter(([a,b])=>MOVE_COST[mt][TIDX[s.map.grid[b][a].t]]));
+      const h=hurtF(x,y), f=fleetF(x,y);
+      pos=isFinite(h)?-h*150 : isFinite(f)?-Math.max(0,f-2)*120 : -propField(x,y)*40; }
     else if(!d.range) pos=-propField(x,y)*40; // 수송 유닛: AI가 거의 만들지 않음
     else pos=-Math.min(enemyField(x,y), hqField(x,y)+4)*170;
     if(!isFinite(pos)&&d.cls==='ship') pos=-propField(x,y)*120;
@@ -159,10 +174,15 @@ function chooseBuild(s,ctx,x,y,options,budget,left){
     const want=Math.min(4, 1+Math.floor(s.day/5)+N.enemy.length);
     if(N.mine.length>want) return null; // 맞수까지 합쳐도 원하는 수보다 한 척 넘게는 두지 않는다
     if(foe('sub')>mine('cruiser') && affordable('cruiser')) return 'cruiser';
-    if(foe('bship')+foe('lander')+foe('cruiser')>mine('sub') && affordable('sub')) return 'sub';
+    if(foe('bship')+foe('lander')+foe('bboat')+foe('cruiser')>mine('sub') && affordable('sub')) return 'sub';
     if(enemyCopter>=2 && enemyCopter>mine('cruiser')*2 && affordable('cruiser')) return 'cruiser';
     // 항공모함: 적 항공기가 둘 이상이고 아직 없으면 한 척
     if(enemyAir.length>=2 && mine('carrier')<1 && affordable('carrier') && budget>=price('carrier')+2000) return 'carrier';
+    // 블랙보트: 함대가 둘 이상이고 다친 함선이 있는데 아직 없으면 한 척(수리·보충용)
+    if(N.mine.length>=2 && !ctx.mine.some(u=>u.type==='bboat') && affordable('bboat') && budget>=price('bboat')+3000){
+      const f=field(s,'lander',[[x,y]]), near=u=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{ const X=u.x+dx,Y=u.y+dy; return X>=0&&Y>=0&&X<s.map.W&&Y<s.map.H&&isFinite(f(X,Y)); });
+      if(N.mine.some(u=>E.disp(u.hp)<=7 && near(u))) return 'bboat'; // 이 항구에서 뱃길로 닿는 다친 함선이 있을 때만
+    }
     if(N.mine.length>=want) return null;
     if(affordable('bship') && (mine('bship')<=mine('sub')+mine('cruiser') || budget>=34000)) return 'bship';
     if(N.enemy.length && affordable('sub') && budget>=24000) return 'sub';
@@ -244,6 +264,7 @@ function apply(s,a){
     E.commitMove(s,u,a.x,a.y,a.cost);
     if(a.act==='attack'){ const t=s.units.find(v=>v.id===a.target); if(t) E.attack(s,u,t); }
     else if(a.act==='capture') E.capture(s,u);
+    else if(a.act==='repair'){ const t=s.units.find(v=>v.id===a.target); if(t) E.repair(s,u,t); }
     if(s.units.includes(u)){ u.done=true; if(u.type==='stealth') u.dived=u.fuel>24; } // 스텔스기는 연료가 넉넉하면 숨는다
     return true;
   }

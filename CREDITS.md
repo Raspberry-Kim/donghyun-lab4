@@ -4,7 +4,7 @@
 
 ## 참고한 것
 
-- 피해표는 원작 2편(Black Hole Rising)의 값에 맞췄다. 원작 2편에 없는 스텔스기·항공모함의 가격·이동·연료·탄약·사거리는 [AWBW 병종표](https://awbw.amarriner.com/units.php), 피해 값은 [AWBW 피해표](https://awbw.amarriner.com/damage.php)를 따랐다. 은폐·탑재 규칙은 [AWBW 위키 Stealth](https://awbw.fandom.com/wiki/Stealth)·[Carrier](https://awbw.fandom.com/wiki/Carrier) 항목을 참고했다.
+- 피해표는 원작 2편(Black Hole Rising)의 값에 맞췄다. 원작 2편에 없는 스텔스기·항공모함·블랙보트의 가격·이동·연료·탄약·사거리는 [AWBW 병종표](https://awbw.amarriner.com/units.php), 피해 값은 [AWBW 피해표](https://awbw.amarriner.com/damage.php)를 따랐다. 은폐·탑재 규칙은 [AWBW 위키 Stealth](https://awbw.fandom.com/wiki/Stealth)·[Carrier](https://awbw.fandom.com/wiki/Carrier) 항목을 참고했다. 블랙보트의 수리·탑승 규칙은 [AWBW 위키 Black Boat](https://awbw.fandom.com/wiki/Black_Boat)와 [Wars Wiki Black Boat](https://warswiki.org/wiki/Black_Boat) 항목을 참고했다. 그림은 새로 그렸다.
 - 푸른달 사령부 지휘관 6–9의 능력 수치는 원작 2편 블루문 지휘관 네 명의 능력을 [AWBW 지휘관표](https://awbw.amarriner.com/co.php)로 확인해 따랐다. 이름·성격·대사·얼굴은 새로 지었다.
 - 지도 설계 원칙(회전 대칭, 한쪽 공장 3곳 안팎, 생산 기지 앞 본부)은 [AWBW 위키의 Design Maps](https://awbw.fandom.com/wiki/Design_Maps)를 읽고 참고했다. 지도 자체는 베끼지 않았다.
 

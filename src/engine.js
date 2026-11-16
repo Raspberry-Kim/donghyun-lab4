@@ -226,9 +226,28 @@ function supplyAround(s,u){
   return n;
 }
 function refill(u){ u.fuel=UNITS[u.type].fuel; u.ammo=UNITS[u.type].ammo; }
+/* 블랙보트의 수리: 이웃한 아군 하나의 체력 +1(값은 그 유닛 가격의 10%)과 연료·탄약 보충.
+   자금이 모자라거나 체력이 가득하면 체력은 그대로 두고 보충만 한다. 수리받은 유닛은 그 차례에 그대로 행동할 수 있다. */
+function repairTargets(s,u,x,y){
+  if(!UNITS[u.type].repair) return [];
+  const X=x==null?u.x:x, Y=y==null?u.y:y;
+  return s.units.filter(o=>!o.carried && o.owner===u.owner && o!==u && dist(o.x,o.y,X,Y)===1);
+}
+function repairPlan(s,u,t){
+  const price=UNITS[t.type].cost/10, hp=disp(t.hp), full=hp>=10, poor=!full && s.players[u.owner].funds<price;
+  return {price, hp, heal:!full&&!poor, full, poor};
+}
+function repair(s,u,t){
+  if(!UNITS[u.type].repair || t.owner!==u.owner || t===u || t.carried || dist(t.x,t.y,u.x,u.y)!==1) return null;
+  const pl=repairPlan(s,u,t);
+  if(pl.heal){ s.players[u.owner].funds-=pl.price; t.hp=Math.min(100,(pl.hp+1)*10); }
+  refill(t);
+  event(s,{k:'repair', id:u.id, type:u.type, owner:u.owner, target:t.id, tt:t.type, x:t.x, y:t.y, heal:pl.heal?1:0, price:pl.heal?pl.price:0, full:pl.full, poor:pl.poor});
+  return pl;
+}
 function load(s,u,t){ u.carried=true; u.done=true; u.x=t.x; u.y=t.y; t.cargo.push(u); const tl=tile(s,t.x,t.y); event(s,{k:'load',id:u.id,type:u.type,owner:u.owner,into:t.type}); }
 function unloadSpots(s,t,c){
-  if(t.type==='lander' && !['shoal','port'].includes(tile(s,t.x,t.y).t)) return [];
+  if(UNITS[t.type].mt==='lander' && !['shoal','port'].includes(tile(s,t.x,t.y).t)) return []; // 수송함·블랙보트는 모래톱·항구에 닿아야 내린다
   const out=[];
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
     const x=t.x+dx,y=t.y+dy, tl=tile(s,x,y); if(!tl) continue;
@@ -327,7 +346,7 @@ function concede(s,p){ s.winner=3-p; s.reason='항복'; }
 function readyUnits(s,p){ return s.units.filter(u=>u.owner===p&&!u.done&&!u.carried); }
 
 const API={newGame,tile,unitAt,moveCost,reach,pathTo,stopOK,canLoad,canJoin,weaponVs,damage,forecast,targetsFrom,canCounter,attack,
-  commitMove,capture,supplyAround,load,unload,unloadSpots,join,build,usePower,startTurn,endTurn,checkEnd,concede,readyUnits,
+  commitMove,capture,supplyAround,repairTargets,repairPlan,repair,load,unload,unloadSpots,join,build,usePower,startTurn,endTurn,checkEnd,concede,readyUnits,
   priceOf,canBuildAt,moveOf,rangeOf,atkValue,propsOf,incomeOf,snowFor,snowOn,powOf,pwId,disp,dist,key,coOf,rng,terrainStars};
 if(typeof module!=='undefined') module.exports=API; else root.Engine=API;
 })(typeof self!=='undefined'?self:this);
