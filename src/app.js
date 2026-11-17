@@ -189,11 +189,14 @@ async function beginTurn(){
   if(finishCheck()) return;
   if(p===2) runCPU(); else { mode='idle'; const r=E.readyUnits(S,1); if(r.length){} hud(); }
 }
+/* 승리 축하: 팡파르(약 10초)와 꽃비. 결과 카드가 닫히거나 다른 판이 열리면 함께 멈춘다. 소리를 꺼 두어도 꽃비는 내린다. 꽃잎은 결과 카드 자리를 비켜 간다.
+   `?motion=reduce`로 열면 꽃잎이 떨어지지 않고 멈춘 채로 보인다 */
+function fete(){ const s=S; SND.play('pomp'); DHPETALS.start($('.board-stage'),{dur:10.4,still:reduced,hole:()=>{ const c=$('#result-card>div'); if(!c) return null; const a=c.getBoundingClientRect(), b=$('.board-stage').getBoundingClientRect(); return [a.left-b.left,a.top-b.top,a.width,a.height]; },alive:()=>S===s&&!$('#result-card').hidden,cut:()=>SND.stop()}); }
 function finishCheck(){
   if(!S||!S.winner) return false;
   processEvents(); mode='over'; closeMenu(); hud();
   const win=S.winner===1, P=S.players;
-  if(sndOver!==S){ sndOver=S; SND.play(win?'win':'lose'); }
+  if(sndOver!==S){ sndOver=S; if(win) fete(); else SND.play('lose'); }
   const card=$('#result-card');
   card.innerHTML=`<div><h3>${win?'승리':'패배'}</h3><p>${S.day}일째 · ${esc(S.reason)}${win?' · 붉은 진영이 이겼다.':' · 푸른 진영이 이겼다.'}</p>
   <dl><dt></dt><dt>나</dt><dt>${AI_H}</dt><dt>만든 유닛</dt><dd>${P[1].built}</dd><dd>${P[2].built}</dd><dt>무찌른 유닛</dt><dd>${P[1].kills}</dd><dd>${P[2].kills}</dd><dt>잃은 유닛</dt><dd>${P[1].lost}</dd><dd>${P[2].lost}</dd><dt>거점</dt><dd>${E.propsOf(S,1)}</dd><dd>${E.propsOf(S,2)}</dd></dl>
@@ -602,7 +605,7 @@ canvas.addEventListener('click',e=>{
 window.render_game_to_text=()=>JSON.stringify(S?{mode,day:S.day,turn:S.turn,winner:S.winner,cursor:ui.cursor,menu:menu?menu.items.map(i=>i.label):null,menuIndex:menu?menu.i:null,
   funds:[S.players[1].funds,S.players[2].funds],meter:[S.players[1].meter,S.players[2].meter],
   units:S.units.filter(u=>!u.carried).map(u=>({id:u.id,t:u.type,o:u.owner,x:u.x,y:u.y,hp:u.hp,done:u.done}))}:{mode:'setup',cfg});
-window.__dongHyunJeon={get state(){return S;},key,get mode(){return mode;}};
+window.__dongHyunJeon={get state(){return S;},key,get mode(){return mode;},get sounds(){return SND.played;},get ringing(){return SND.ringing;}};
 sortieCard(cfg); preview(cfg); renderSlotList(); autoPreview(true);
 /* ---------- 전체 화면(동현둠과 같은 규칙) ---------- */
 const stageFull=$('#stage-full');
