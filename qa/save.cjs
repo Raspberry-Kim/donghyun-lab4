@@ -15,7 +15,7 @@ async function pick(label){ for(let i=0;i<10;i++){const s=await st(); if(s.menu&
 await p.keyboard.press('Enter'); let s=await st(); console.log('menu',s.menu);
 await pick('저장'); s=await st(); console.log('save menu',s.menu);
 await pick('브라우저 칸 1'); 
-const dl=p.waitForEvent('download'); await p.keyboard.press('Enter'); await pick('저장'); await pick('파일로 내려받기'); const d=await dl; await d.saveAs(__dirname+'/test.dhsave');
+const dl=p.waitForEvent('download'); await p.keyboard.press('Enter'); await pick('저장'); await pick('파일로 내려받기'); const d=await dl; const saved=require('path').join(require('os').tmpdir(),'donghyun-jeon-save-'+process.pid+'.dhsave'); await d.saveAs(saved); // 저장소의 qa/test.dhsave(다른 시험의 고정 자료)는 덮어쓰지 않는다
 // 상태를 바꾼 뒤 불러오기
 await p.evaluate(()=>{__dongHyunJeon.state.players[1].funds=1;});
 await p.keyboard.press('Enter'); await pick('불러오기'); await pick('브라우저 칸 1'); s=await st(); console.log('confirm',s.menu); await pick('불러온다');
@@ -24,7 +24,7 @@ console.log('before',before);console.log('after ',after);
 // 새로고침 후 첫 화면 칸 목록과 파일 불러오기
 await p.reload(); await p.waitForTimeout(300);
 console.log('slots',await p.$$eval('.slot-btn',bs=>bs.map(b=>b.disabled?'empty':b.textContent)));
-await p.setInputFiles('#load-file-setup',__dirname+'/test.dhsave'); await p.waitForTimeout(300);
+await p.setInputFiles('#load-file-setup',saved); await p.waitForTimeout(300);
 await p.waitForTimeout(800); s=await st(); console.log('file load day',s.day,'mode',s.mode,'units',s.units.length);
 await p.screenshot({path:__dirname+'/shot-load.png'});
 // 잘못된 파일
